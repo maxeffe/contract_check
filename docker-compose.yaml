@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  app:
+    build: ./app/
+    image: contract_checker_app
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app:/app
+    # depends_on:
+    #   - db
+    #   - rabbitmq
+  web-proxy:
+    build: ./nginx
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - app
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    # environment:
+    #   RABBITMQ_DEFAULT_USER: admin
+    #   RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    restart: on-failure
+
+  db:
+    image: postgres
+    # environment:
+    #   POSTGRES_DB: contract_checker
+    #   POSTGRES_USER: postgres
+    #   POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./db:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    restart: on-failure
+
