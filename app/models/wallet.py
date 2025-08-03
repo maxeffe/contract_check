@@ -22,11 +22,9 @@ class Wallet:
 
     @property
     def balance(self) -> Decimal:
-        """Текущий баланс (read-only)."""
         return self._balance
 
     def _add_tx(self, tx: Transaction) -> None:
-        """Добавляет транзакцию в историю и пересчитывает баланс."""
         self.transactions.append(tx)
         if tx.tx_type == TxType.CREDIT:
             self._balance += tx.amount
@@ -34,7 +32,6 @@ class Wallet:
             self._balance -= tx.amount
 
     def credit(self, amount: Union[int, Decimal]) -> Transaction:
-        """Зачисление средств."""
         amount = Decimal(str(amount))
         tx = Transaction(
             id=len(self.transactions) + 1,
@@ -46,7 +43,6 @@ class Wallet:
         return tx
 
     def debit(self, amount: Union[int, Decimal]) -> Transaction:
-        """Списание средств. Бросает ValueError при нехватке баланса."""
         amount = Decimal(str(amount))
         if self._balance < amount:
             raise ValueError(f"Insufficient balance:"

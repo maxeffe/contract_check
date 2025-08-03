@@ -40,13 +40,11 @@ class MLJob:
     finished_at: Optional[datetime] = None
 
     def start(self) -> None:
-        """Помечает задачу как RUNNING и ставит started_at."""
         self.status = JobStatus.RUNNING
         self.started_at = datetime.now()
 
     def finish_ok(self, summary: str,
                   clauses: List[RiskClause], score: float) -> None:
-        """Финализирует задачу со статусом DONE."""
         self.status = JobStatus.DONE
         self.summary_text = summary
         self.risk_clauses = clauses
@@ -54,7 +52,6 @@ class MLJob:
         self.finished_at = datetime.now()
 
     def finish_error(self, msg: str) -> None:
-        """Финализирует задачу со статусом ERROR."""
         self.status = JobStatus.ERROR
         self.summary_text = f"Error: {msg}"
         self.finished_at = datetime.now()
@@ -62,18 +59,6 @@ class MLJob:
     @classmethod
     def enqueue(cls, user: User, document: Document, model: Model,
                 depth: SummaryDepth = SummaryDepth.BULLET) -> "MLJob":
-        """
-        Создаёт ML‑задачу и списывает кредиты за неё.
-
-        Args:
-            user: Пользователь, инициировавший задачу.
-            document: Документ для обработки.
-            model: Выбранная модель.
-            depth: Желаемая глубина конспекта.
-
-        Returns:
-            Экземпляр MLJob со статусом QUEUED.
-        """
         cost = Decimal(str(document.pages * model.price_per_page))
         user.debit(cost, f"ML processing: {document.filename}")
 

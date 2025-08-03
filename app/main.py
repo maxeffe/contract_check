@@ -1,15 +1,3 @@
-"""
-Web‑сервис для юристов и предпринимателей, который:
-
-* принимает договор (PDF / DOCX / сырой текст, RU или EN);
-* списывает кредиты из личного кабинета (1 кредит = 1 страница);
-* прогоняет документ через модель;
-* возвращает структурированный краткий конспект договора и подсвечивает
-  рискованные пункты.
-
-"""
-
-
 from models.user import User
 from models.admin import Admin
 from models.document import Document
@@ -17,7 +5,7 @@ from models.model import Model
 
 
 if __name__ == "__main__":
-    # Создание пользователя
+
     user = User(
         id=1,
         username="karpov",
@@ -26,11 +14,9 @@ if __name__ == "__main__":
     )
     print(f"Создан пользователь: {user.username}, баланс: {user.balance}")
 
-    # Пополнение счета
     user.credit(500, "initial_payment")
     print(f"После пополнения баланс: {user.balance}")
 
-    # Создание документа
     document = Document(
         id=1,
         user_id=user.id,
@@ -46,7 +32,7 @@ if __name__ == "__main__":
     admin.credit_user(user, 200, "bonus")
     print(f"Админ начислил бонус, баланс пользователя: {user.balance}")
 
-    # Создание ML-модели
+
     model = Model("Legal-Analyzer-RU", price_per_page=3)
     print(f"Модель: {model.name}, цена за страницу: {model.price_per_page}")
 

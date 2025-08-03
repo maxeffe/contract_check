@@ -15,5 +15,4 @@ class Admin(User):
 
     def credit_user(self, other: User, amount: Union[int, Decimal],
                     note: str = "admin_topup") -> Transaction:
-        """Начисляет кредиты другому пользователю от имени администратора."""
         return other.credit(amount, note)

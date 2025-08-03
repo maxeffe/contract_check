@@ -16,5 +16,4 @@ class Model:
         self.price_per_page = price_per_page
 
     def predict(self, text: str) -> str:
-        """Обрабатывает текст через ML-модель и возвращает результат."""
         return f"Processed by {self.name}: {text[:50]}..."
