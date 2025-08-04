@@ -8,10 +8,11 @@ from models.other import JobStatus, SummaryDepth
 from models.riskclause import RiskClause
 from models.document import Document
 from models.model import Model
+from sqlmodel import SQLModel, Field
 
 
 @dataclass
-class MLJob:
+class MLJob(SQLModel, table=True):
     """
     Задание на ML‑обработку документа.
 
@@ -27,7 +28,7 @@ class MLJob:
         risk_clauses (List[RiskClause]): Список рискованных пунктов.
         started_at / finished_at (datetime): Таймстемпы выполнения.
     """
-    id: int
+    id: int = Field(default=None, primary_key=True)
     document: Document
     model: Model
     status: JobStatus = JobStatus.QUEUED

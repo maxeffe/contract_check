@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import Optional
 from models.other import RiskLevel
+from sqlmodel import SQLModel, Field
 
 
 @dataclass
-class RiskClause:
+class RiskClause(SQLmodel, table=true):
     """
     Пункт договора с указанием уровня риска.
 

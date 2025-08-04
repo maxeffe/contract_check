@@ -1,4 +1,7 @@
-class Model:
+from sqlmodel import SQLModel, Field
+
+
+class Model(SQLModel):
     """
     Метаданные ML‑модели.
 
@@ -7,6 +10,7 @@ class Model:
         price_per_page (int): Стоимость обработки одной страницы в кредитах.
         active (bool): Доступна ли модель пользователям.
     """
+    id: int = Field(default=None, primary_key=True)
     name: str
     price_per_page: int
     active: bool = True

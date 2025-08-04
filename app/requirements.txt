@@ -1,4 +1,8 @@
-fastapi==0.78.0
-sqlalchemy==1.4.35
-uvicorn==0.16.0
+fastapi
+sqlalchemy
+uvicorn
 bcrypt
+pydantic
+pydantic-settings
+sqlmodel
+psycopg[binary]
