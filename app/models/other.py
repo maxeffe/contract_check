@@ -1,4 +1,5 @@
 from enum import Enum
+from sqlmodel import SQLModel
 
 
 class Role(str, Enum):
@@ -9,8 +10,8 @@ class Role(str, Enum):
 
 class TxType(str, Enum):
     """Типы движения средств в кошельке."""
-    CREDIT = "CREDIT"   # пополнение
-    DEBIT = "DEBIT"    # списание
+    CREDIT = "CREDIT" 
+    DEBIT = "DEBIT" 
 
 
 class JobStatus(str, Enum):
@@ -23,9 +24,9 @@ class JobStatus(str, Enum):
 
 class SummaryDepth(str, Enum):
     """Гранулярность итогового конспекта договора."""
-    BRIEF = "BRIEF"     # несколько предложений
-    BULLET = "BULLET"    # список буллетов
-    DETAILED = "DETAILED"  # развернутый пересказ
+    BRIEF = "BRIEF"
+    BULLET = "BULLET" 
+    DETAILED = "DETAILED"
 
 
 class RiskLevel(str, Enum):

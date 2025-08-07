@@ -1,13 +1,11 @@
-from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import List, Union
 
 from models.transaction import Transaction
-from models.other import TxType
+# from models.other import TxType
+from sqlmodel import SQLModel, Field
 
-
-@dataclass
-class Wallet:
+class Wallet(SQLModel, table=True):
     """
     Кошелек пользователя для управления балансом и транзакциями.
 
@@ -16,46 +14,49 @@ class Wallet:
         _balance (Decimal): Текущий баланс в кредитах.
         transactions (List[Transaction]): История операций.
     """
+    id: int = Field(default=None, primary_key=True)
     user_id: int
-    _balance: Decimal = Decimal("0")
-    transactions: List[Transaction] = field(default_factory=list)
+    balance: Decimal = Field(default=Decimal("0"))
+    
+    # Список транзакций не в таблице - создается при использовании
 
-    @property
-    def balance(self) -> Decimal:
-        """Текущий баланс (read-only)."""
-        return self._balance
+    def get_balance(self) -> Decimal:
+        return self.balance
+
+    def get_transactions(self) -> List[Transaction]:
+        if not hasattr(self, '_transactions'):
+            self._transactions = []
+        return self._transactions
 
     def _add_tx(self, tx: Transaction) -> None:
-        """Добавляет транзакцию в историю и пересчитывает баланс."""
-        self.transactions.append(tx)
-        if tx.tx_type == TxType.CREDIT:
-            self._balance += tx.amount
-        elif tx.tx_type == TxType.DEBIT:
-            self._balance -= tx.amount
+        transactions = self.get_transactions()
+        transactions.append(tx)
+        if tx.tx_type == "CREDIT":
+            self.balance += tx.amount
+        elif tx.tx_type == "DEBIT":
+            self.balance -= tx.amount
 
-    def credit(self, amount: Union[int, Decimal]) -> Transaction:
-        """Зачисление средств."""
+    def credit(self, amount: Union[int, Decimal], ref: str = "topup") -> Transaction:
         amount = Decimal(str(amount))
         tx = Transaction(
-            id=len(self.transactions) + 1,
+            id=len(self.get_transactions()) + 1,
             user_id=self.user_id,
-            tx_type=TxType.CREDIT,
+            tx_type="CREDIT",
             amount=amount
         )
         self._add_tx(tx)
         return tx
 
-    def debit(self, amount: Union[int, Decimal]) -> Transaction:
-        """Списание средств. Бросает ValueError при нехватке баланса."""
+    def debit(self, amount: Union[int, Decimal], ref: str) -> Transaction:
         amount = Decimal(str(amount))
-        if self._balance < amount:
+        if self.balance < amount:
             raise ValueError(f"Insufficient balance:"
-                             f"{self._balance} < {amount}")
+                             f"{self.balance} < {amount}")
 
         tx = Transaction(
-            id=len(self.transactions) + 1,
+            id=len(self.get_transactions()) + 1,
             user_id=self.user_id,
-            tx_type=TxType.DEBIT,
+            tx_type="DEBIT",
             amount=amount
         )
         self._add_tx(tx)
