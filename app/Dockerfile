@@ -10,5 +10,5 @@ EXPOSE 8080
 
 COPY ./ /app/
 
-CMD [ "python", "api.py" ]
+CMD [ "python", "main.py" ]
 

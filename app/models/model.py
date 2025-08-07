@@ -1,7 +1,4 @@
-from sqlmodel import SQLModel, Field
-
-
-class Model(SQLModel, table=True):
+class Model:
     """
     Метаданные ML‑модели.
 
@@ -10,10 +7,14 @@ class Model(SQLModel, table=True):
         price_per_page (int): Стоимость обработки одной страницы в кредитах.
         active (bool): Доступна ли модель пользователям.
     """
-    id: int = Field(default=None, primary_key=True)
     name: str
-    price_per_page: int = Field(default=1)
-    active: bool = Field(default=True)
+    price_per_page: int
+    active: bool = True
+
+    def __init__(self, name: str, price_per_page: int = 1):
+        self.name = name
+        self.price_per_page = price_per_page
 
     def predict(self, text: str) -> str:
+        """Обрабатывает текст через ML-модель и возвращает результат."""
         return f"Processed by {self.name}: {text[:50]}..."

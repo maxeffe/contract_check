@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   app:
     build: ./app/
@@ -6,6 +8,9 @@ services:
       - ./app/.env
     volumes:
       - ./app:/app
+    # depends_on:
+    #   - db
+    #   - rabbitmq
   web-proxy:
     build: ./nginx
     ports:
@@ -13,32 +18,28 @@ services:
       - 443:443
     depends_on:
       - app
-      - db
 
   rabbitmq:
     image: rabbitmq:3-management
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    # environment:
+    #   RABBITMQ_DEFAULT_USER: admin
+    #   RABBITMQ_DEFAULT_PASS: admin
     ports:
       - 15672:15672
       - 5672:5672
     volumes:
-      - rabbitmq_volume:/var/lib/rabbitmq
+      - ./rabbitmq:/var/lib/rabbitmq
     restart: on-failure
 
   db:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    image: postgres
+    # environment:
+    #   POSTGRES_DB: contract_checker
+    #   POSTGRES_USER: postgres
+    #   POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres_volume:/var/lib/postgresql/data
+      - ./db:/var/lib/postgresql
     ports:
       - 5432:5432
     restart: on-failure
 
-volumes:
-  postgres_volume:
-  rabbitmq_volume:

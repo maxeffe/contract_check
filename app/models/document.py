@@ -1,7 +1,9 @@
+from dataclasses import dataclass, field
 from datetime import datetime
-from sqlmodel import SQLModel, Field
 
-class Document(SQLModel, table=True):
+
+@dataclass
+class Document:
     """
     Загруженный договор / файл.
 
@@ -14,10 +16,10 @@ class Document(SQLModel, table=True):
         language (str): RU, EN или UNKNOWN.
         uploaded_at (datetime): Время загрузки.
     """
-    id: int = Field(default=None, primary_key=True)
+    id: int
     user_id: int
     filename: str
     raw_text: str
     pages: int
     language: str = "UNKNOWN"
-    uploaded_at: datetime = Field(default_factory=datetime.now)
+    uploaded_at: datetime = field(default_factory=datetime.now)

@@ -1,11 +1,11 @@
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-# from models.other import TxType
-from sqlmodel import SQLModel, Field
-# from sqlalchemy import Column, Enum as SQLEnum
+from models.other import TxType
 
 
-class Transaction(SQLModel, table=True):
+@dataclass
+class Transaction:
     """
     Движение средств в кошельке пользователя.
 
@@ -16,8 +16,8 @@ class Transaction(SQLModel, table=True):
         amount (Decimal): Сумма операции в кредитах (без знака).
         trans_time (datetime): Момент совершения операции.
     """
-    id: int = Field(default=None, primary_key=True)
+    id: int
     user_id: int
-    tx_type: str
+    tx_type: TxType
     amount: Decimal
-    trans_time: datetime = Field(default_factory=datetime.now)
+    trans_time: datetime = field(default_factory=datetime.now)
