@@ -1,8 +1,6 @@
-from dataclasses import dataclass, field
 from datetime import datetime
 from sqlmodel import SQLModel, Field
 
-@dataclass
 class Document(SQLModel, table=True):
     """
     Загруженный договор / файл.
@@ -22,4 +20,4 @@ class Document(SQLModel, table=True):
     raw_text: str
     pages: int
     language: str = "UNKNOWN"
-    uploaded_at: datetime = field(default_factory=datetime.now)
+    uploaded_at: datetime = Field(default_factory=datetime.now)

@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from models.wallet import Wallet
     from models.transaction import Transaction
 from sqlmodel import SQLModel, Field
+from pydantic import validator
 # from sqlalchemy import Column, Enum as SQLEnum
 
 
@@ -30,18 +31,17 @@ class User(SQLModel, table=True):
     password: str
     role: str = Field(default="USER")
 
-    def model_post_init(self, __context) -> None:
-        self._validate_email()
-        self._validate_password()
-        # Wallet создается отдельно при необходимости
-
-    def _validate_email(self) -> None:
-        if not re.fullmatch(r"^[\w\.-]+@[\w\.-]+\.\w+$", self.email):
+    @validator('email')
+    def validate_email(cls, v):
+        if not re.fullmatch(r"^[\w\.-]+@[\w\.-]+\.\w+$", v):
             raise ValueError("Invalid email")
+        return v
 
-    def _validate_password(self) -> None:
-        if len(self.password) < 8:
+    @validator('password')  
+    def validate_password(cls, v):
+        if len(v) < 8:
             raise ValueError("Password must be ≥ 8 chars")
+        return v
 
     @staticmethod
     def hash_password(password: str) -> str:

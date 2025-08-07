@@ -1,11 +1,7 @@
-from dataclasses import dataclass
 from typing import Optional
-from models.other import RiskLevel
 from sqlmodel import SQLModel, Field
 
-
-@dataclass
-class RiskClause(SQLmodel, table=true):
+class RiskClause(SQLModel, table=True):
     """
     Пункт договора с указанием уровня риска.
 
@@ -14,6 +10,8 @@ class RiskClause(SQLmodel, table=true):
         risk_level (RiskLevel): LOW, MEDIUM или HIGH.
         explanation (Optional[str]): Комментарий‑обоснование.
     """
+    id: int = Field(default=None, primary_key=True)
+    job_id: int = Field(foreign_key="mljob.id")
     clause_text: str
-    risk_level: RiskLevel
+    risk_level: str
     explanation: Optional[str] = None
