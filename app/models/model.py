@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field
 
 
-class Model(SQLModel):
+class Model(SQLModel, table=True):
     """
     Метаданные ML‑модели.
 
@@ -12,12 +12,8 @@ class Model(SQLModel):
     """
     id: int = Field(default=None, primary_key=True)
     name: str
-    price_per_page: int
-    active: bool = True
-
-    def __init__(self, name: str, price_per_page: int = 1):
-        self.name = name
-        self.price_per_page = price_per_page
+    price_per_page: int = Field(default=1)
+    active: bool = Field(default=True)
 
     def predict(self, text: str) -> str:
         return f"Processed by {self.name}: {text[:50]}..."
