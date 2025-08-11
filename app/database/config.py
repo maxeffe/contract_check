@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     DB_PASS: Optional[str] = None
     DB_NAME: Optional[str] = None
     SECRET_KEY: Optional[str] = None
+    RABBITMQ_HOST: Optional[str] = None
+    RABBITMQ_PORT: Optional[int] = None
     RABBITMQ_DEFAULT_USER: Optional[str] = None
     RABBITMQ_DEFAULT_PASS: Optional[str] = None
 

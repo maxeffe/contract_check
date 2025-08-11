@@ -6,17 +6,17 @@ from services.crud import document as DocumentService
 from services.crud import wallet as WalletService
 from services.crud import mljob as MLJobService
 from services.crud import model as ModelService
+from services.rabbitmq_config import get_ml_publisher
 
 class MockMLService:
-    """Мок-сервис для имитации ML предсказаний"""
+    """Сервис имитации ML предсказаний"""
     
     @staticmethod
     def analyze_contract(text: str, language: str = "UNKNOWN") -> Dict[str, Any]:
         """Имитация анализа договора с ML моделью"""
-        # Простая имитация результата анализа
+
         word_count = len(text.split())
         
-        # Имитируем различные типы рисков
         risk_score = min(word_count * 0.01, 1.0)
         
         result = {
@@ -46,9 +46,8 @@ class MockMLService:
     @staticmethod
     def calculate_cost(pages: int, language: str = "UNKNOWN") -> Decimal:
         """Расчет стоимости анализа на основе количества страниц и языка"""
-        base_cost = Decimal("1.0")  # 1 кредит за страницу
-        
-        # Множители для разных языков
+        base_cost = Decimal("1.0") 
+
         language_multipliers = {
             "RU": Decimal("1.0"),
             "EN": Decimal("1.2"),
@@ -71,11 +70,9 @@ def process_prediction_request(
 ) -> Dict[str, Any]:
     """Обработка запроса на предсказание - бизнес-логика уровня приложения"""
     
-    # Подсчитываем примерное количество страниц (по 500 слов на страницу)
     word_count = len(document_text.split())
     pages = max(1, word_count // 500)
     
-    # Создаем документ в базе
     document = DocumentService.create_document(
         user_id=user_id,
         filename=filename or f"document_{uuid.uuid4().hex[:8]}.txt",
@@ -85,7 +82,6 @@ def process_prediction_request(
         language=language
     )
     
-    # Получаем или создаем модель
     model = ModelService.get_model_by_name(model_name, session)
     if not model:
         model = ModelService.create_model(
@@ -95,15 +91,12 @@ def process_prediction_request(
             active=True
         )
     
-    # Рассчитываем стоимость
     cost = Decimal(str(pages * model.price_per_page))
     
-    # Проверяем баланс пользователя
     wallet = WalletService.get_or_create_wallet(user_id, session)
     if wallet.balance < cost:
         raise ValueError(f"Insufficient balance. Required: {cost}, Available: {wallet.balance}")
     
-    # Создаем ML задание
     job = MLJobService.create_mljob(
         document_id=document.id,
         model_id=model.id,
@@ -111,32 +104,24 @@ def process_prediction_request(
         summary_depth=summary_depth
     )
     
-    # Списываем средства
     WalletService.debit_wallet(user_id, cost, session)
     
-    # Выполняем анализ
-    analysis_result = MockMLService.analyze_contract(document_text, language)
-    
-    # Завершаем задание с результатами
-    risk_clauses_data = [{
-        "text": clause["text_snippet"],
-        "risk_level": clause["risk_level"],
-        "explanation": clause["recommendation"]
-    } for clause in analysis_result.get("identified_clauses", [])]
-    
-    completed_job = MLJobService.complete_job(
+    publisher = get_ml_publisher()
+    task_sent = publisher.publish_ml_task(
         job_id=job.id,
-        summary_text=analysis_result.get("summary", ""),
-        risk_score=analysis_result.get("risk_score", 0.0),
-        risk_clauses=risk_clauses_data,
-        session=session
+        document_id=document.id,
+        model_id=model.id,
+        summary_depth=summary_depth
     )
     
+    if not task_sent:
+        raise Exception("Не удалось отправить задачу в очередь обработки")
+    
     return {
-        "job_id": completed_job.id,
+        "job_id": job.id,
         "document_id": document.id,
-        "prediction_result": analysis_result,
+        "status": "queued",
+        "message": "Задача отправлена на обработку",
         "cost": float(cost),
-        "pages_processed": pages,
-        "status": "completed"
+        "pages_processed": pages
     }

@@ -44,10 +44,10 @@ async def create_prediction(
         prediction_logger.info(f"Анализ завершен успешно. Job ID: {result['job_id']}, стоимость: {result['cost']}")
         
         return {
-            "message": "Prediction completed successfully",
+            "message": result["message"],
             "job_id": result["job_id"],
             "document_id": result["document_id"],
-            "prediction_result": result["prediction_result"],
+            "status": result["status"],
             "cost": result["cost"],
             "pages_processed": result["pages_processed"]
         }
@@ -106,11 +106,11 @@ async def predict_from_file(
         )
         
         return {
-            "message": "File uploaded and analyzed successfully",
+            "message": f"File {file.filename} uploaded and queued for analysis",
             "filename": file.filename,
             "job_id": result["job_id"],
             "document_id": result["document_id"],
-            "prediction_result": result["prediction_result"],
+            "status": result["status"],
             "cost": result["cost"],
             "pages_processed": result["pages_processed"]
         }

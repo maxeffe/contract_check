@@ -6,6 +6,9 @@ services:
       - ./app/.env
     volumes:
       - ./app:/app
+    depends_on:
+      - db
+      - rabbitmq
   web-proxy:
     build: ./nginx
     ports:
@@ -37,6 +40,46 @@ services:
     ports:
       - 5432:5432
     restart: on-failure
+
+  ml-worker-1:
+    build: ./app/
+    image: contract_checker_app
+    command: python ml_worker.py worker-1
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+      - rabbitmq
+    restart: on-failure
+
+  ml-worker-2:
+    build: ./app/
+    image: contract_checker_app
+    command: python ml_worker.py worker-2
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+      - rabbitmq
+    restart: on-failure
+
+  ml-worker-3:
+    build: ./app/
+    image: contract_checker_app
+    command: python ml_worker.py worker-3
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+      - rabbitmq
+    restart: on-failure
+
 
 volumes:
   postgres_volume:

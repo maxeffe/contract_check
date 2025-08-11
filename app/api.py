@@ -13,9 +13,9 @@ app = FastAPI(
 )
 
 app.include_router(home_route)
-app.include_router(user_route, prefix='/users')
+app.include_router(user_route, prefix='/auth')
 app.include_router(wallet_route, prefix='/wallet')
-app.include_router(prediction_route, prefix='/predictions')
+app.include_router(prediction_route)
 
 
 @app.on_event('startup')
