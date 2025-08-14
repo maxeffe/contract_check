@@ -22,7 +22,7 @@ app.include_router(prediction_route)
 def startup():
     api_logger.info("Запуск приложения...")
     init_db()
-    api_logger.info("База данных инициализирована")
+    api_logger.info("База данных инициализирована..")
 
 if __name__ == '__main__':
     api_logger.info("Запуск uvicorn сервера на порту 8080")

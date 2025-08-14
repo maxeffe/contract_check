@@ -1,0 +1,1850 @@
+/* Minimalist High-Contrast Theme for Contract Analysis Platform */
+
+/* CSS Custom Properties for Theme Consistency */
+:root {
+    /* Colors */
+    --primary-bg: #fafafa;
+    --secondary-bg: #ffffff;
+    --sidebar-bg: #1a1a1a;
+    --text-primary: #1a1a1a;
+    --text-secondary: #2d2d2d;
+    --text-muted: #666666;
+    --text-inverse: #ffffff;
+    --border-light: #e0e0e0;
+    --border-medium: #cccccc;
+    --shadow-light: rgba(0,0,0,0.1);
+    --shadow-medium: rgba(0,0,0,0.15);
+    
+    /* Typography */
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', 'Helvetica Neue', sans-serif;
+    --font-size-base: 16px;
+    --font-size-small: 0.9rem;
+    --font-size-large: 1.1rem;
+    --line-height: 1.6;
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    
+    /* Components */
+    --border-radius: 4px;
+    --border-radius-large: 8px;
+    --button-height: 44px;
+    --transition: all 0.2s ease;
+}
+
+/* Main app styling */
+.stApp {
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: var(--line-height);
+    font-size: var(--font-size-base);
+}
+
+/* Improved Typography Hierarchy */
+.main-header {
+    font-size: clamp(1.8rem, 4vw, 2.2rem);
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xl);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    font-family: var(--font-family);
+    line-height: 1.2;
+}
+
+.section-header {
+    font-size: var(--font-size-large);
+    color: var(--text-primary);
+    font-weight: 500;
+    margin: var(--space-lg) 0 var(--space-md) 0;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: var(--space-sm);
+    position: relative;
+}
+
+.section-header::before {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 3rem;
+    height: 2px;
+    background: var(--text-primary);
+}
+
+/* Improved content spacing */
+.content-section {
+    margin-bottom: var(--space-xl);
+    padding: var(--space-lg);
+    background: var(--secondary-bg);
+    border-radius: var(--border-radius-large);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.content-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Better information density */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin: var(--space-md) 0;
+}
+
+.info-card {
+    background: var(--secondary-bg);
+    padding: var(--space-lg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.info-card:hover {
+    border-color: var(--text-primary);
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    transform: translateY(-2px);
+}
+
+.info-card h4 {
+    margin: 0 0 var(--space-sm) 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-large);
+    font-weight: 500;
+}
+
+.info-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+    line-height: 1.5;
+}
+
+/* Sidebar main title */
+.sidebar-main-title {
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+    margin: 0 0 1rem 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Auth info section styling */
+.auth-info-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    padding: 1rem 1.25rem !important;
+    margin: 1rem 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+.auth-required-text {
+    color: #1a1a1a !important;
+    font-size: 0.9rem !important;
+    margin: 0 !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+}
+
+.auth-required-text strong {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+/* Feature cards */
+.feature-card {
+    padding: 1.5rem;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #2d2d2d;
+    margin: 0.5rem 0;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    cursor: default;
+    pointer-events: none;
+}
+
+.feature-card h4 {
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    font-size: 1.1rem;
+}
+
+/* Status indicators */
+.status-completed { 
+    color: #1a1a1a; 
+    font-weight: 500; 
+}
+
+.status-error { 
+    color: #666666; 
+    font-weight: 500; 
+}
+
+.status-processing { 
+    color: #4a4a4a; 
+    font-weight: 500; 
+}
+
+.status-queued { 
+    color: #333333; 
+    font-weight: 500; 
+}
+
+/* Metric cards */
+.metric-card {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #1a1a1a;
+    transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border-left-width: 3px;
+}
+
+/* Sidebar styling - Black theme */
+.css-1d391kg, .css-1lcbmhc, .css-1aumxhk, section[data-testid="stSidebar"] {
+    background-color: #1a1a1a !important;
+    border-right: 1px solid #333333;
+}
+
+/* Sidebar text styling */
+.css-1d391kg .element-container,
+.css-1lcbmhc .element-container,
+section[data-testid="stSidebar"] .element-container {
+    color: #ffffff !important;
+}
+
+/* Sidebar markdown text */
+.css-1d391kg .stMarkdown,
+.css-1lcbmhc .stMarkdown,
+section[data-testid="stSidebar"] .stMarkdown {
+    color: #ffffff !important;
+}
+
+/* Sidebar headers */
+.css-1d391kg .stMarkdown h1,
+.css-1d391kg .stMarkdown h2,
+.css-1d391kg .stMarkdown h3,
+.css-1d391kg .stMarkdown h4,
+.css-1d391kg .stMarkdown h5,
+.css-1d391kg .stMarkdown h6,
+.css-1lcbmhc .stMarkdown h1,
+.css-1lcbmhc .stMarkdown h2,
+.css-1lcbmhc .stMarkdown h3,
+.css-1lcbmhc .stMarkdown h4,
+.css-1lcbmhc .stMarkdown h5,
+.css-1lcbmhc .stMarkdown h6,
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] h5,
+section[data-testid="stSidebar"] h6 {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    font-size: 1.1rem !important;
+}
+
+/* Sidebar paragraph text */
+.css-1d391kg .stMarkdown p,
+.css-1lcbmhc .stMarkdown p,
+section[data-testid="stSidebar"] p {
+    color: #cccccc !important;
+    font-size: 0.9rem !important;
+}
+
+/* Sidebar italic text */
+.css-1d391kg .stMarkdown em,
+.css-1lcbmhc .stMarkdown em,
+section[data-testid="stSidebar"] em {
+    color: #aaaaaa !important;
+    font-style: italic;
+    font-size: 0.85rem !important;
+}
+
+/* Sidebar buttons */
+.css-1d391kg .stButton > button,
+.css-1lcbmhc .stButton > button,
+section[data-testid="stSidebar"] .stButton > button {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border: 1px solid #555555 !important;
+    font-size: 0.9rem !important;
+    font-weight: 400 !important;
+}
+
+.css-1d391kg .stButton > button:hover,
+.css-1lcbmhc .stButton > button:hover,
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #444444 !important;
+    color: #ffffff !important;
+    border: 1px solid #666666 !important;
+}
+
+/* Sidebar info boxes */
+.css-1d391kg .stInfo,
+.css-1lcbmhc .stInfo,
+section[data-testid="stSidebar"] .stInfo {
+    background-color: #2d2d2d !important;
+    border: 1px solid #444444 !important;
+    border-left: 3px solid #ffffff !important;
+    color: #cccccc !important;
+}
+
+/* Sidebar success boxes */
+.css-1d391kg .stSuccess,
+.css-1lcbmhc .stSuccess,
+section[data-testid="stSidebar"] .stSuccess {
+    background-color: #2d2d2d !important;
+    border: 1px solid #444444 !important;
+    border-left: 3px solid #ffffff !important;
+    color: #cccccc !important;
+}
+
+/* Sidebar metrics */
+.css-1d391kg [data-testid="metric-container"],
+.css-1lcbmhc [data-testid="metric-container"],
+section[data-testid="stSidebar"] [data-testid="metric-container"] {
+    background-color: #2d2d2d !important;
+    border: 1px solid #444444 !important;
+    color: #ffffff !important;
+}
+
+/* Sidebar collapse button - make it visible */
+.css-1rs6os.edgvbvh3,
+[data-testid="collapsedControl"] {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #555555 !important;
+}
+
+[data-testid="collapsedControl"]:hover {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+}
+
+/* Button styling - Universal white text */
+.stButton > button {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #1a1a1a !important;
+    border-radius: 4px;
+    font-weight: 500 !important;
+    padding: 0.5rem 1rem;
+    transition: all 0.15s ease;
+    font-size: 0.9rem;
+}
+
+
+/* Force white text on ALL button elements */
+.stButton > button,
+.stButton > button *,
+.stButton > button span,
+.stButton > button div,
+.stButton > button p,
+button[data-testid],
+button[data-testid] *,
+button[data-testid] span,
+button[data-testid] div {
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.stButton > button:hover {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.stButton > button:active {
+    transform: translateY(0.5px);
+}
+
+.stButton > button:focus {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #1a1a1a !important;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26,26,26,0.2);
+}
+
+/* Primary button variant */
+.stButton > button[kind="primary"] {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+}
+
+.stButton > button[kind="primary"]:focus {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #1a1a1a !important;
+}
+
+/* Enhanced Auth Forms Styling */
+.stTabs .stForm {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Auth form input containers - full width */
+.stTabs .stTextInput {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.stTabs .stTextInput > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.stTabs .stTextInput > div > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Modern Auth form inputs - full width no validation styling */
+.stTabs .stTextInput > div > div > input {
+    border: 1px solid #e8eaed !important;
+    border-radius: 12px !important;
+    padding: 1rem 1.25rem !important;
+    font-size: 1rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    color: #1a1a1a !important;
+    font-weight: 400 !important;
+}
+
+/* Remove validation styling */
+.stTabs .stTextInput > div > div > input:invalid,
+.stTabs .stTextInput > div > div > input:invalid:focus {
+    border-color: #e8eaed !important;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.stTabs .stTextInput > div > div > input:valid {
+    border-color: #e8eaed !important;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Hide tooltips and validation messages */
+.stTabs .stTextInput [title],
+.stTabs .stTextInput [data-tooltip],
+.stTabs .stForm [title],
+.stTabs .stForm [data-tooltip] {
+    pointer-events: none !important;
+}
+
+.stTabs .stTextInput > div > div > input[title],
+.stTabs .stTextInput > div > div > input[data-tooltip] {
+    title: '' !important;
+}
+
+/* Hide any form validation messages */
+.stTabs .stTextInput .stError,
+.stTabs .stForm .stError,
+.stTabs .stTextInput .invalid-feedback,
+.stTabs .stForm .invalid-feedback {
+    display: none !important;
+}
+
+/* Remove browser validation styling */
+.stTabs input:focus:invalid {
+    box-shadow: none !important;
+}
+
+/* Hide "Press Enter" hints and similar tooltips */
+.stTabs [data-baseweb="tooltip"],
+.stTabs .tooltip,
+.stTabs [role="tooltip"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Global tooltip hiding */
+[data-baseweb="tooltip"],
+.tooltip,
+[role="tooltip"],
+.stTooltipHoverTarget {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Hide Streamlit's native tooltips */
+div[data-testid="stTooltipHoverTarget"] {
+    display: none !important;
+}
+
+/* Fix placeholder text overflow */
+.stTabs .stTextInput > div > div > input::placeholder {
+    color: #999999 !important;
+    font-size: 0.9rem !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+}
+
+.stTabs .stTextInput > div > div > input:focus {
+    border-color: #1a1a1a !important;
+    box-shadow: 
+        0 0 0 4px rgba(26, 26, 26, 0.12),
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    outline: none;
+    background: #ffffff !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Modern Auth form labels */
+.stTabs .stTextInput > label {
+    font-weight: 600 !important;
+    color: #2d3748 !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 0.9rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    position: relative !important;
+}
+
+/* Modern Login and Register buttons */
+.stTabs .stButton > button {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    padding: 1rem 2.5rem !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 220px !important;
+    margin: 2rem auto 0.5rem auto !important;
+    box-shadow: 
+        0 8px 24px rgba(26, 26, 26, 0.25),
+        0 4px 12px rgba(26, 26, 26, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Modern button hover effect */
+.stTabs .stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.stTabs .stButton > button:hover {
+    background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 
+        0 12px 32px rgba(26, 26, 26, 0.3),
+        0 6px 16px rgba(26, 26, 26, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-4px) scale(1.02) !important;
+}
+
+.stTabs .stButton > button:hover::before {
+    left: 100%;
+}
+
+.stTabs .stButton > button:active {
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 
+        0 6px 16px rgba(26, 26, 26, 0.25),
+        0 2px 8px rgba(26, 26, 26, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.1s ease;
+}
+
+/* Form spacing */
+.stTabs .stForm > div {
+    gap: 1rem;
+}
+
+/* Enhanced form container */
+.stTabs .element-container {
+    margin-bottom: 1rem;
+}
+
+/* Form section divider */
+.stTabs .stMarkdown hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+    margin: 2rem 0;
+}
+
+/* Error messages styling in tabs */
+.stTabs .stAlert {
+    border-radius: 8px !important;
+    border-left-width: 4px !important;
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem !important;
+}
+
+/* Success messages styling in tabs */
+.stTabs .stSuccess {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    border-left-color: #28a745 !important;
+    color: #155724 !important;
+}
+
+/* Modern Auth form headers */
+.stTabs h3 {
+    color: #1a1a1a;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 1.4rem;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.stTabs h3::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 2px;
+}
+
+/* Form field groups - improved spacing */
+.stTabs .stForm .stTextInput {
+    margin-bottom: 1.5rem;
+}
+
+.stTabs .stForm .stTextInput:last-of-type {
+    margin-bottom: 1rem;
+}
+
+/* Ensure form containers don't overflow - with proper margins */
+.stTabs .stForm {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 1.5rem !important;
+}
+
+/* Tab container overall */
+.stTabs {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Enhanced button text visibility */
+.stTabs .stButton button *,
+.stTabs .stButton button span,
+.stTabs .stButton button div {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+/* Tab container background */
+.stTabs {
+    background: transparent;
+    margin: 2rem 0;
+}
+
+/* Individual tab panels */
+.stTabs [role="tabpanel"] {
+    background: #ffffff;
+    border-radius: 0 0 8px 8px;
+    padding: 2rem !important;
+    min-height: 300px;
+}
+
+/* Force white text on all form buttons - Enhanced */
+.stForm button,
+.stForm button span,
+.stForm button div,
+.stForm button p,
+.stTabs button,
+.stTabs button span,
+.stTabs button div,
+.stTabs button p,
+form button,
+form button span,
+form button div,
+form button p,
+.stForm [data-testid="baseButton-secondary"],
+.stForm [data-testid="baseButton-primary"],
+.stTabs [data-testid="baseButton-secondary"],
+.stTabs [data-testid="baseButton-primary"] {
+    color: #ffffff !important;
+    background-color: #1a1a1a !important;
+}
+
+/* Additional targeting for nested elements */
+.stForm button *,
+.stTabs button *,
+form button * {
+    color: #ffffff !important;
+}
+
+/* Specific targeting for auth forms */
+.stForm .stButton button,
+.stForm .stButton button *,
+.stTabs .stButton button,
+.stTabs .stButton button * {
+    color: #ffffff !important;
+    background-color: #1a1a1a !important;
+}
+
+/* Override any inherited text colors */
+.stForm, .stForm *,
+.stTabs, .stTabs * {
+    text-decoration: none !important;
+}
+
+/* Force white text in button containers */
+[data-testid="stForm"] button,
+[data-testid="stForm"] button *,
+.css-1cpxqw2 button,
+.css-1cpxqw2 button * {
+    color: #ffffff !important;
+}
+
+/* Simplified Button Styling - Semantic Approach */
+button,
+[role="button"],
+.stButton button {
+    --button-bg: #1a1a1a;
+    --button-text: #ffffff;
+    --button-hover: #333333;
+    
+    background-color: var(--button-bg) !important;
+    color: var(--button-text) !important;
+    border: 1px solid var(--button-bg) !important;
+}
+
+button:hover,
+[role="button"]:hover,
+.stButton button:hover {
+    background-color: var(--button-hover) !important;
+    color: var(--button-text) !important;
+    border-color: var(--button-hover) !important;
+}
+
+/* Ensure button text visibility */
+button *,
+[role="button"] *,
+.stButton button * {
+    color: var(--button-text) !important;
+}
+
+/* Metric container styling */
+[data-testid="metric-container"] {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+[data-testid="metric-container"]:hover {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-color: #1a1a1a;
+}
+
+/* Metric values */
+[data-testid="metric-container"] [data-testid="metric-value"] {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Metric labels */
+[data-testid="metric-container"] [data-testid="metric-label"] {
+    color: #666666;
+    font-weight: 400;
+}
+
+/* Form styling */
+.stTextInput > div > div > input {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix placeholder text overflow for all input fields */
+.stTextInput > div > div > input::placeholder {
+    color: #999999 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 1px rgba(26,26,26,0.2);
+    outline: none;
+}
+
+.stSelectbox > div > div > div {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+/* Dropdown option styling */
+.stSelectbox option {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    padding: 0.5rem !important;
+}
+
+/* Dropdown menu container */
+.stSelectbox [role="listbox"] {
+    background-color: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Individual dropdown options */
+.stSelectbox [role="option"] {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.95rem !important;
+}
+
+/* Dropdown option hover state */
+.stSelectbox [role="option"]:hover {
+    background-color: #f5f5f5 !important;
+    color: #1a1a1a !important;
+}
+
+/* Selected dropdown option */
+.stSelectbox [role="option"][aria-selected="true"] {
+    background-color: #e9ecef !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+}
+
+/* Dropdown text inside the select box */
+.stSelectbox > div > div > div > div {
+    color: #1a1a1a !important;
+    font-size: 0.95rem !important;
+    background-color: #ffffff !important;
+}
+
+/* Selectbox placeholder text */
+.stSelectbox > div > div > div[data-baseweb="select"] > div {
+    color: #1a1a1a !important;
+}
+
+/* Ensure dropdown arrow is visible */
+.stSelectbox svg {
+    color: #666666 !important;
+}
+
+/* Additional selectbox styling for better visibility */
+.stSelectbox .st-emotion-cache-1inwz65,
+.stSelectbox .st-emotion-cache-1xarl3l,
+.stSelectbox div[data-baseweb="select"] {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+/* Selectbox current value display */
+.stSelectbox div[data-baseweb="select"] > div > div {
+    color: #1a1a1a !important;
+    background-color: #ffffff !important;
+    font-weight: 400 !important;
+}
+
+/* Selectbox dropdown list */
+.stSelectbox ul[role="listbox"] {
+    background-color: #ffffff !important;
+    border: 2px solid #cccccc !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+}
+
+/* All selectbox text elements */
+.stSelectbox * {
+    color: #1a1a1a !important;
+}
+
+/* Force white background on all dropdown elements */
+.stSelectbox [data-testid] {
+    background-color: #ffffff !important;
+}
+
+/* Selectbox input field */
+.stSelectbox input {
+    color: #1a1a1a !important;
+    background-color: #ffffff !important;
+}
+
+/* Force visibility for all Streamlit select elements */
+div[data-baseweb="select"] {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+div[data-baseweb="select"] * {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+/* Popover menu for dropdowns */
+div[data-baseweb="popover"] {
+    background-color: #ffffff !important;
+    border: 2px solid #cccccc !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+}
+
+div[data-baseweb="popover"] * {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+/* Select dropdown options */
+div[data-baseweb="menu"] {
+    background-color: #ffffff !important;
+    border: 1px solid #cccccc !important;
+}
+
+div[data-baseweb="menu"] li {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    padding: 8px 12px !important;
+}
+
+div[data-baseweb="menu"] li:hover {
+    background-color: #f5f5f5 !important;
+    color: #1a1a1a !important;
+}
+
+/* Option list items */
+[role="listbox"] li {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    padding: 8px 12px !important;
+}
+
+[role="listbox"] li:hover {
+    background-color: #f5f5f5 !important;
+    color: #1a1a1a !important;
+}
+
+/* Menu items with specific targeting */
+[role="option"] {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    font-size: 14px !important;
+}
+
+/* BaseWeb select component specific */
+.st-emotion-cache-1inwz65 {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+.st-emotion-cache-1xarl3l {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+/* Override any emotion cache classes that might be hiding text */
+[class*="st-emotion-cache"] {
+    color: #1a1a1a !important;
+    background-color: #ffffff !important;
+}
+
+.stSelectbox > div > div > div:focus-within {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 1px rgba(26,26,26,0.2);
+}
+
+/* Text area styling */
+.stTextArea > div > div > textarea {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.stTextArea > div > div > textarea:focus {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 1px rgba(26,26,26,0.2);
+    outline: none;
+}
+
+/* File uploader */
+.stFileUploader > div {
+    border: 2px dashed #cccccc;
+    border-radius: 6px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    background-color: #fafafa;
+}
+
+.stFileUploader > div:hover {
+    border-color: #1a1a1a;
+    background-color: #ffffff;
+}
+
+.stFileUploader [data-testid="stFileUploaderDropzone"] {
+    color: #2d2d2d;
+}
+
+.stFileUploader [data-testid="stFileUploaderDropzone"]:hover {
+    color: #1a1a1a;
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0.75rem;
+    font-weight: 400;
+    color: #2d2d2d;
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: #fafafa;
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+}
+
+.streamlit-expander {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+/* Prominent 'About system' expander - VERY PROMINENT */
+[data-testid="stExpander"] {
+    margin: 3rem 0 !important;
+    position: relative;
+}
+
+[data-testid="stExpander"] .streamlit-expanderHeader {
+    background: linear-gradient(45deg, #000000, #1a1a1a, #000000) !important;
+    color: #ffffff !important;
+    border: 4px solid #000000 !important;
+    font-weight: 900 !important;
+    font-size: 1.8rem !important;
+    padding: 2rem 2.5rem !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 0 6px #000000,
+        0 10px 30px rgba(0, 0, 0, 0.8),
+        0 0 50px rgba(0, 0, 0, 0.3) !important;
+    cursor: pointer !important;
+    position: relative !important;
+    overflow: hidden !important;
+    animation: subtle-pulse 3s ease-in-out infinite !important;
+}
+
+/* Pulse animation for extra prominence */
+@keyframes subtle-pulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 
+            0 0 0 3px #ffffff,
+            0 0 0 6px #000000,
+            0 10px 30px rgba(0, 0, 0, 0.8),
+            0 0 50px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+        transform: scale(1.02); 
+        box-shadow: 
+            0 0 0 3px #ffffff,
+            0 0 0 6px #000000,
+            0 12px 35px rgba(0, 0, 0, 0.9),
+            0 0 60px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Shimmer effect */
+[data-testid="stExpander"] .streamlit-expanderHeader::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 4s ease-in-out infinite;
+    z-index: 1;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}
+
+[data-testid="stExpander"] .streamlit-expanderHeader:hover {
+    background: linear-gradient(45deg, #1a1a1a, #333333, #1a1a1a) !important;
+    color: #ffffff !important;
+    border-color: #1a1a1a !important;
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 0 6px #1a1a1a,
+        0 15px 40px rgba(0, 0, 0, 0.9),
+        0 0 80px rgba(26, 26, 26, 0.5) !important;
+    transform: translateY(-3px) scale(1.03) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    animation: none !important; /* Stop pulse on hover */
+}
+
+[data-testid="stExpander"] .streamlit-expanderHeader:active {
+    transform: translateY(-1px) scale(1.01) !important;
+    transition: all 0.1s ease !important;
+    animation: none !important; /* Stop pulse on click */
+}
+
+/* Ensure text is above shimmer effect */
+[data-testid="stExpander"] .streamlit-expanderHeader div {
+    position: relative !important;
+    z-index: 2 !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7) !important;
+}
+
+[data-testid="stExpander"] .streamlit-expander {
+    border: 4px solid #000000 !important;
+    border-radius: 12px !important;
+    background-color: #ffffff;
+    box-shadow: 
+        0 0 0 3px #ffffff,
+        0 0 0 7px #000000,
+        0 8px 25px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden !important;
+    margin-top: 0.5rem !important;
+}
+
+
+/* Data frame styling */
+.stDataFrame {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #ffffff;
+}
+
+.stDataFrame table {
+    background-color: #ffffff;
+    color: #1a1a1a;
+}
+
+.stDataFrame th {
+    background-color: #fafafa;
+    color: #2d2d2d;
+    font-weight: 500;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.stDataFrame td {
+    color: #1a1a1a;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Alert styling */
+.stAlert {
+    border-radius: 4px;
+    border-left: 3px solid #1a1a1a;
+    background-color: #ffffff;
+    color: #2d2d2d;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #1a1a1a;
+}
+
+/* Success alerts */
+.stSuccess {
+    background-color: #ffffff;
+    border-left-color: #1a1a1a;
+    color: #2d2d2d;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #1a1a1a;
+}
+
+/* Error alerts */
+.stError {
+    background-color: #ffffff;
+    border-left-color: #666666;
+    color: #2d2d2d;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #666666;
+}
+
+/* Warning alerts */
+.stWarning {
+    background-color: #ffffff;
+    border-left-color: #4a4a4a;
+    color: #2d2d2d;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #4a4a4a;
+}
+
+/* Info alerts */
+.stInfo {
+    background-color: #ffffff;
+    border-left-color: #333333;
+    color: #2d2d2d;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #333333;
+}
+
+/* Sidebar info text - make it black */
+.stSidebar .stInfo {
+    color: #1a1a1a !important;
+}
+
+.stSidebar .stInfo div {
+    color: #1a1a1a !important;
+}
+
+/* Progress bar */
+.stProgress > div > div > div {
+    background-color: #1a1a1a;
+    border-radius: 2px;
+}
+
+.stProgress > div > div {
+    background-color: #f0f0f0;
+    border-radius: 2px;
+}
+
+/* Spinner */
+.stSpinner > div {
+    border-top-color: #1a1a1a;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+}
+
+/* Loading message */
+.stSpinner + div {
+    color: #2d2d2d;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Tabs Design - Toggle Switcher Style */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0;
+    border-bottom: none;
+    background: #e9ecef;
+    border-radius: 25px;
+    padding: 3px;
+    margin: 1.5rem 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid #dee2e6;
+    display: flex;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stTabs [data-baseweb="tab"] {
+    color: #6c757d;
+    border: none;
+    border-radius: 22px;
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    font-size: 1rem;
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    min-width: 140px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: rgba(26,26,26,0.05);
+    color: #495057;
+    transform: scale(1.02);
+}
+
+.stTabs [aria-selected="true"] {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+    z-index: 2;
+}
+
+/* Hide tab indicator/slider */
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+
+.stTabs .css-1cpxqw2 [data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+
+/* Hide any sliding indicators */
+.stTabs [role="tablist"] > div:last-child {
+    display: none !important;
+}
+
+.stTabs [data-baseweb="tab-list"] > div:last-child {
+    display: none !important;
+}
+
+/* Additional selectors to hide tab indicators */
+.stTabs [data-baseweb="tab-border"] {
+    display: none !important;
+}
+
+.stTabs .css-1cpxqw2::after {
+    display: none !important;
+}
+
+.stTabs [role="tablist"]::after {
+    display: none !important;
+}
+
+/* Hide all possible tab highlight elements */
+.stTabs [class*="highlight"],
+.stTabs [class*="indicator"],
+.stTabs [class*="slider"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Modern Tab content styling - UX/UI improved with proper spacing */
+.stTabs > div > div > div > div {
+    padding: 2rem 1rem 2.5rem 1rem;
+    background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: 16px;
+    border: none;
+    margin-top: 0.5rem;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 2px 16px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative;
+}
+
+/* Modern glass morphism effect */
+.stTabs > div > div > div > div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+    z-index: 1;
+}
+
+/* Subtle hover animation */
+.stTabs > div > div > div > div:hover {
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.12),
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transform: translateY(-4px);
+}
+
+/* Plotly charts */
+.js-plotly-plot {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    background-color: #ffffff;
+}
+
+/* Custom utility classes */
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #666666;
+}
+
+.text-secondary {
+    color: #999999;
+}
+
+.font-weight-medium {
+    font-weight: 500;
+}
+
+.font-weight-semibold {
+    font-weight: 600;
+}
+
+.border-primary {
+    border: 1px solid #1a1a1a;
+}
+
+.bg-light {
+    background-color: #fafafa;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.rounded {
+    border-radius: 4px;
+}
+
+/* Typography improvements */
+h1, h2, h3, h4, h5, h6 {
+    color: #1a1a1a;
+    line-height: 1.3;
+    margin-bottom: 0.5em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+h1 { font-size: 2.2rem; font-weight: 500; }
+h2 { font-size: 1.8rem; font-weight: 500; }
+h3 { font-size: 1.4rem; font-weight: 500; }
+h4 { font-size: 1.2rem; font-weight: 500; }
+h5 { font-size: 1.1rem; font-weight: 500; }
+h6 { font-size: 1rem; font-weight: 500; }
+
+p {
+    color: #2d2d2d;
+    line-height: 1.6;
+    margin-bottom: 1em;
+    font-size: 1rem;
+}
+
+/* Improved readability */
+.stMarkdown {
+    color: #2d2d2d;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.stMarkdown h1, 
+.stMarkdown h2, 
+.stMarkdown h3, 
+.stMarkdown h4, 
+.stMarkdown h5, 
+.stMarkdown h6 {
+    color: #1a1a1a;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.stMarkdown h3 {
+    font-size: 1.3rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.stMarkdown strong {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Better text sizing for all elements */
+.stTextInput label,
+.stSelectbox label,
+.stTextArea label,
+.stNumberInput label,
+.stRadio label,
+.stCheckbox label {
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #1a1a1a !important;
+}
+
+/* Tab styling with better fonts */
+.stTabs [data-baseweb="tab"] {
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.stTabs [aria-selected="true"] {
+    font-weight: 500 !important;
+}
+
+/* Radio buttons and checkboxes */
+.stRadio > div {
+    color: #2d2d2d;
+}
+
+.stRadio label {
+    color: #2d2d2d;
+    font-size: 0.95rem;
+}
+
+.stCheckbox > label {
+    color: #2d2d2d;
+    font-size: 0.95rem;
+}
+
+/* Number input */
+.stNumberInput > div > div > input {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #1a1a1a;
+}
+
+.stNumberInput > div > div > input:focus {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 1px rgba(26,26,26,0.2);
+    outline: none;
+}
+
+/* Multiselect */
+.stMultiSelect > div > div {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+.stMultiSelect > div > div:focus-within {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 1px rgba(26,26,26,0.2);
+}
+
+/* Hide Streamlit default elements */
+/* Hide the main menu */
+#MainMenu {visibility: hidden;}
+
+/* Hide footer */
+footer {visibility: hidden;}
+
+/* Hide header */
+header {visibility: hidden;}
+
+/* Hide automatic page navigation in sidebar */
+section[data-testid="stSidebarNav"] {
+    display: none !important;
+}
+
+.css-1544g2n {
+    display: none !important;
+}
+
+.css-17lntkn {
+    display: none !important;
+}
+
+/* Hide page navigation links */
+[data-testid="stSidebarNavItems"],
+[data-testid="stSidebarNavLink"],
+.css-pkbazv {
+    display: none !important;
+}
+
+/* Hide deploy button */
+.css-1rs6os.edgvbvh3,
+.css-10trblm.e16nr0p30 {
+    display: none !important;
+}
+
+/* Hide Streamlit watermark */
+.css-h5rgaw.egzxvld1 {
+    visibility: hidden;
+}
+
+/* Hide Settings, Deploy, Rerun, etc buttons in toolbar */
+.css-1dp5vir.e8zbici0,
+.css-634ng7.e1ewe7hr0,
+.css-1kyxreq.etr89bj0,
+.css-1rsyhoq.ehod8kx0,
+.css-163ttbj.e1g8pov61,
+.css-1x8cf1d.e1ewe7hr0,
+.css-qbe2hs.e1ewe7hr0,
+.stDeployButton,
+[data-testid="stToolbar"],
+[data-testid="manage-app-button"],
+button[title="Deploy this app"],
+button[title="Rerun"],
+button[title="Settings"],
+button[title="Record a screencast"],
+button[title="Clear cache and rerun"],
+[data-testid="collapsedControl"] {
+    display: none !important;
+}
+
+/* Hide GitHub link and other action buttons */
+.css-1v8iw7l.eknhn3m0,
+.css-1fv8s86.e16zdaao0 {
+    display: none !important;
+}
+
+/* Hide "Made with Streamlit" */
+.css-cio0dv.egzxvld1 {
+    visibility: hidden;
+}
+
+/* Hide all action buttons in toolbar */
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
+[data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+/* Hide specific buttons */
+[data-testid="baseButton-header"],
+[data-testid="baseButton-headerNoPadding"] {
+    display: none !important;
+}
+
+/* Hide streamlit header */
+.css-18e3th9.e1d2x48p0 {
+    display: none !important;
+}
+
+.css-1d391kg .css-1v0mbdj.etr89bj1 {
+    display: none !important;
+}
+
+/* Mobile-First Responsive Design */
+
+/* Mobile (320px - 768px) */
+@media (max-width: 768px) {
+    .stApp {
+        font-size: 14px;
+    }
+    
+    .main-header {
+        font-size: 1.8rem !important;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        padding: 0 1rem;
+    }
+    
+    .feature-card {
+        padding: 1rem;
+        margin: 0.25rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .feature-card h4 {
+        font-size: 1rem;
+    }
+    
+    .metric-card {
+        padding: 0.75rem;
+        margin: 0.25rem 0;
+    }
+    
+    [data-testid="metric-container"] {
+        padding: 0.75rem !important;
+        margin: 0.25rem 0;
+    }
+    
+    .stButton > button {
+        font-size: 0.85rem !important;
+        padding: 0.5rem 1rem !important;
+        min-height: 44px; /* Touch target size */
+    }
+    
+    /* Mobile sidebar */
+    .css-1d391kg, .css-1lcbmhc, section[data-testid="stSidebar"] {
+        min-width: 280px !important;
+    }
+    
+    /* Mobile form elements */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        font-size: 16px !important; /* Prevent zoom on iOS */
+        padding: 0.75rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Mobile auth forms - with proper margins */
+    .stTabs .stForm {
+        max-width: 100% !important;
+        padding: 0 1rem !important;
+    }
+    
+    .stTabs .stTextInput {
+        max-width: 100% !important;
+    }
+    
+    .stTabs > div > div > div > div {
+        padding: 1.5rem 0.75rem 2rem 0.75rem !important;
+    }
+    
+    .stTabs .stTextInput > div > div > input {
+        padding: 0.85rem 1rem !important;
+        font-size: 16px !important;
+    }
+    
+    .stTabs .stButton > button {
+        max-width: 200px !important;
+        font-size: 0.9rem !important;
+        padding: 0.85rem 2rem !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .stTabs h3 {
+        font-size: 1.2rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* Mobile placeholder text */
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea > div > div > textarea::placeholder {
+        font-size: 14px !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+    }
+    
+    .stSelectbox > div > div > div {
+        min-height: 44px;
+        font-size: 16px !important;
+    }
+    
+    /* Mobile columns - stack vertically */
+    .row-widget.stHorizontal > div {
+        flex-direction: column !important;
+    }
+    
+    /* Mobile expander */
+    [data-testid="stExpander"] .streamlit-expanderHeader {
+        font-size: 1rem !important;
+        padding: 1rem !important;
+        text-align: left !important;
+    }
+    
+    /* Mobile charts */
+    .js-plotly-plot {
+        height: 300px !important;
+    }
+    
+    /* Mobile data tables */
+    .stDataFrame {
+        font-size: 0.8rem;
+        overflow-x: auto;
+    }
+}
+
+/* Tablet (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-header {
+        font-size: 2rem;
+    }
+    
+    .feature-card {
+        padding: 1.25rem;
+    }
+    
+    .stButton > button {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.1rem;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .stButton > button {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.75rem 1.25rem;
+    }
+    
+    
+    .streamlit-expanderHeader:hover {
+        transform: none;
+    }
+}

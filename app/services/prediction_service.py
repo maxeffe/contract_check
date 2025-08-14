@@ -104,8 +104,7 @@ def process_prediction_request(
         summary_depth=summary_depth
     )
     
-    WalletService.debit_wallet(user_id, cost, session)
-    
+    # Сначала попробуем отправить задачу в очередь
     publisher = get_ml_publisher()
     task_sent = publisher.publish_ml_task(
         job_id=job.id,
@@ -115,7 +114,13 @@ def process_prediction_request(
     )
     
     if not task_sent:
+        # Если не удалось отправить задачу, удаляем job и НЕ списываем деньги
+        session.delete(job)
+        session.commit()
         raise Exception("Не удалось отправить задачу в очередь обработки")
+    
+    # Списываем деньги ТОЛЬКО после успешной отправки задачи
+    WalletService.debit_wallet(user_id, cost, session)
     
     return {
         "job_id": job.id,

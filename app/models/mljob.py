@@ -43,3 +43,12 @@ class MLJob(SQLModel, table=True):
         self.status = "ERROR"
         self.summary_text = f"Error: {msg}"
         self.finished_at = datetime.now()
+
+    def get_user_id(self, session) -> int:
+        """Получить user_id через связанный документ"""
+        from models.document import Document
+        from sqlmodel import select
+        statement = select(Document).where(Document.id == self.document_id)
+        result = session.exec(statement)
+        document = result.first()
+        return document.user_id if document else None
