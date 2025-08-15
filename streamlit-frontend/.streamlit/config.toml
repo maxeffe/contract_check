@@ -1,0 +1,8 @@
+[client]
+showSidebarNavigation = false
+
+[ui]
+hideTopBar = true
+
+[theme]
+base = "light"

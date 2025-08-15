@@ -29,6 +29,21 @@ def get_job_by_id(job_id: int, session: Session) -> Optional[MLJob]:
     return result.first()
 
 
+def get_user_jobs(user_id: int, session: Session, skip: int = 0, limit: int = 10) -> List[MLJob]:
+    """Получить задания пользователя с пагинацией"""
+    from models.document import Document
+    
+    statement = (
+        select(MLJob)
+        .join(Document)
+        .where(Document.user_id == user_id)
+        .order_by(MLJob.started_at.desc(), MLJob.id.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    result = session.exec(statement)
+    return list(result.all())
+
 def count_user_jobs(user_id: int, session: Session) -> int:
     """Подсчитать общее количество заданий пользователя"""
     from models.document import Document

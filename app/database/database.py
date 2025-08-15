@@ -14,5 +14,5 @@ def get_session():
         yield session
 
 def init_db():
-    SQLModel.metadata.drop_all(engine)
+    # Исправлено: создаём таблицы только если их нет, не удаляем существующие данные
     SQLModel.metadata.create_all(engine)

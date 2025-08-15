@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Any
 from datetime import datetime
 from decimal import Decimal
@@ -6,11 +6,11 @@ from decimal import Decimal
 class PredictionRequest(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     
-    document_text: str
-    filename: Optional[str] = None
-    language: Optional[str] = "UNKNOWN"
-    model_name: Optional[str] = "default_model"
-    summary_depth: Optional[str] = "BULLET"
+    document_text: str = Field(..., min_length=10, max_length=1000000, description="Текст документа (10-1000000 символов)")
+    filename: Optional[str] = Field(None, max_length=255, description="Имя файла")
+    language: Optional[str] = Field("UNKNOWN", pattern="^(RU|EN|UNKNOWN)$", description="Язык документа")
+    model_name: Optional[str] = Field("default_model", max_length=100, description="Название модели")
+    summary_depth: Optional[str] = Field("BULLET", pattern="^(BULLET|DETAILED)$", description="Глубина анализа")
 
 class RiskClauseResponse(BaseModel):
     id: int
