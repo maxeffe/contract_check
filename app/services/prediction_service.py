@@ -114,12 +114,11 @@ def process_prediction_request(
     )
     
     if not task_sent:
-        # Если не удалось отправить задачу, удаляем job и НЕ списываем деньги
         session.delete(job)
         session.commit()
         raise Exception("Не удалось отправить задачу в очередь обработки")
     
-    # Списываем деньги ТОЛЬКО после успешной отправки задачи
+
     WalletService.debit_wallet(user_id, cost, session)
     
     return {

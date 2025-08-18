@@ -192,12 +192,10 @@ class MLWorker:
                     if status == "ERROR":
                         job.finish_error(error_msg)
                         
-                        # Возврат денег при неудачном предсказании
                         if refund_money:
                             try:
                                 user_id = job.get_user_id(session)
                                 if user_id:
-                                    # Рассчитываем сумму для возврата на основе стоимости обработки
                                     from decimal import Decimal
                                     document = session.get(Document, job.document_id)
                                     model = session.get(Model, job.model_id)

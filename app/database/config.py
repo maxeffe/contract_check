@@ -20,7 +20,6 @@ class Settings(BaseSettings):
         return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
     
     @property
-    @property
     def DATABASE_URL_psycopg(self):
         return f'postgresql+psycopg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
     
