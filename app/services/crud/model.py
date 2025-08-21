@@ -29,13 +29,13 @@ def get_model_by_name(name: str, session: Session) -> Optional[Model]:
 def create_model(
     name: str,
     session: Session,
-    price_per_page: int = 1,
+    price_per_token: float = 0.001,
     active: bool = True
 ) -> Model:
     """Создать новую модель"""
     model = Model(
         name=name,
-        price_per_page=price_per_page,
+        price_per_token=price_per_token,
         active=active
     )
     session.add(model)
@@ -47,7 +47,7 @@ def update_model(
     model_id: int,
     session: Session,
     name: str = None,
-    price_per_page: int = None,
+    price_per_token: float = None,
     active: bool = None
 ) -> Optional[Model]:
     """Обновить модель"""
@@ -57,8 +57,8 @@ def update_model(
     
     if name is not None:
         model.name = name
-    if price_per_page is not None:
-        model.price_per_page = price_per_page
+    if price_per_token is not None:
+        model.price_per_token = price_per_token
     if active is not None:
         model.active = active
     

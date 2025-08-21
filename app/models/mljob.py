@@ -1,17 +1,15 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from typing import Optional
 from sqlmodel import SQLModel, Field
 
 class MLJob(SQLModel, table=True):
+    model_config = {"protected_namespaces": ()}
     """
     Задание на ML‑обработку документа.
 
     Attributes:
         id (int): Идентификатор задачи.
-        document_id (int): ID исходного документа.
-        model_id (int): ID используемой ML‑модели.
         document_id (int): ID исходного документа.
         model_id (int): ID используемой ML‑модели.
         status (JobStatus): Текущий статус выполнения.
@@ -27,24 +25,15 @@ class MLJob(SQLModel, table=True):
     status: str = Field(default="QUEUED")
     summary_depth: str = Field(default="BULLET")
     used_credits: Decimal = Field(default=Decimal("0"))
-    document_id: int = Field(foreign_key="document.id")
-    model_id: int = Field(foreign_key="model.id")
-    status: str = Field(default="QUEUED")
-    summary_depth: str = Field(default="BULLET")
-    used_credits: Decimal = Field(default=Decimal("0"))
     summary_text: Optional[str] = None
     risk_score: Optional[float] = None
-    started_at: Optional[datetime] = Field(default_factory=datetime.now)
     started_at: Optional[datetime] = Field(default_factory=datetime.now)
     finished_at: Optional[datetime] = None
 
     def start(self) -> None:
         self.status = "RUNNING"
-        self.status = "RUNNING"
         self.started_at = datetime.now()
 
-    def finish_ok(self, summary: str, score: float) -> None:
-        self.status = "DONE"
     def finish_ok(self, summary: str, score: float) -> None:
         self.status = "DONE"
         self.summary_text = summary
@@ -52,7 +41,6 @@ class MLJob(SQLModel, table=True):
         self.finished_at = datetime.now()
 
     def finish_error(self, msg: str) -> None:
-        self.status = "ERROR"
         self.status = "ERROR"
         self.summary_text = f"Error: {msg}"
         self.finished_at = datetime.now()

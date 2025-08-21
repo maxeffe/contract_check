@@ -70,14 +70,14 @@ def process_prediction_request(
 ) -> Dict[str, Any]:
     """Обработка запроса на предсказание - бизнес-логика уровня приложения"""
     
-    word_count = len(document_text.split())
-    pages = max(1, word_count // 500)
+    from models.document import Document
+    token_count = Document.count_tokens(document_text)
     
     document = DocumentService.create_document(
         user_id=user_id,
         filename=filename or f"document_{uuid.uuid4().hex[:8]}.txt",
         raw_text=document_text,
-        pages=pages,
+        token_count=token_count,
         session=session,
         language=language
     )
@@ -87,11 +87,11 @@ def process_prediction_request(
         model = ModelService.create_model(
             name=model_name,
             session=session,
-            price_per_page=1,
+            price_per_token=0.001,
             active=True
         )
     
-    cost = Decimal(str(pages * model.price_per_page))
+    cost = Decimal(str(token_count * model.price_per_token))
     
     wallet = WalletService.get_or_create_wallet(user_id, session)
     if wallet.balance < cost:
@@ -104,7 +104,6 @@ def process_prediction_request(
         summary_depth=summary_depth
     )
     
-    # Сначала попробуем отправить задачу в очередь
     publisher = get_ml_publisher()
     task_sent = publisher.publish_ml_task(
         job_id=job.id,
@@ -114,12 +113,11 @@ def process_prediction_request(
     )
     
     if not task_sent:
-        # Если не удалось отправить задачу, удаляем job и НЕ списываем деньги
         session.delete(job)
         session.commit()
         raise Exception("Не удалось отправить задачу в очередь обработки")
     
-    # Списываем деньги ТОЛЬКО после успешной отправки задачи
+
     WalletService.debit_wallet(user_id, cost, session)
     
     return {
@@ -128,5 +126,5 @@ def process_prediction_request(
         "status": "queued",
         "message": "Задача отправлена на обработку",
         "cost": float(cost),
-        "pages_processed": pages
+        "tokens_processed": token_count
     }

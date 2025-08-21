@@ -84,12 +84,10 @@ def complete_job(
     if not job:
         return None
     
-    # Обновляем задание
     job.status = JobStatus.DONE
     job.summary_text = summary_text
     job.risk_score = risk_score
     
-    # Создаем рискованные пункты
     for clause_data in risk_clauses:
         risk_clause = RiskClause(
             job_id=job.id,
@@ -109,3 +107,14 @@ def get_job_risk_clauses(job_id: int, session: Session) -> List[RiskClause]:
     statement = select(RiskClause).where(RiskClause.job_id == job_id)
     result = session.exec(statement)
     return list(result.all())
+
+def add_risk_clauses_to_job(job_id: int, risk_clauses: List[dict], session: Session):
+    """Добавить рискованные пункты к заданию"""
+    for clause_data in risk_clauses:
+        risk_clause = RiskClause(
+            job_id=job_id,
+            clause_text=clause_data.get("clause_text", ""),
+            risk_level=clause_data.get("risk_level", "LOW"),
+            explanation=clause_data.get("explanation", "")
+        )
+        session.add(risk_clause)

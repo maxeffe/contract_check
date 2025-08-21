@@ -7,6 +7,7 @@ class WalletResponse(BaseModel):
     id: int
     user_id: int
     balance: Decimal
+    total_transactions: int
 
 class TransactionResponse(BaseModel):
     id: int

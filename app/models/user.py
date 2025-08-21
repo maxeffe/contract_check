@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from models.wallet import Wallet
     from models.transaction import Transaction
 from sqlmodel import SQLModel, Field
-from pydantic import validator
+from pydantic import field_validator
 # from sqlalchemy import Column, Enum as SQLEnum
 
 
@@ -31,13 +31,15 @@ class User(SQLModel, table=True):
     password: str
     role: str = Field(default="USER")
 
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email(cls, v):
         if not re.fullmatch(r"^[\w\.-]+@[\w\.-]+\.\w+$", v):
             raise ValueError("Invalid email")
         return v
 
-    @validator('password')  
+    @field_validator('password')  
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be ≥ 8 chars")
@@ -55,4 +57,3 @@ class User(SQLModel, table=True):
         return bcrypt.checkpw(password.encode('utf-8'),
                               self.password.encode('utf-8'))
 
-    # Методы для работы с кошельком будут добавлены позже

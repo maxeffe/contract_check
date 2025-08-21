@@ -6,7 +6,7 @@ def create_document(
     user_id: int,
     filename: str,
     raw_text: str,
-    pages: int,
+    token_count: int,
     session: Session,
     language: str = "UNKNOWN"
 ) -> Document:
@@ -15,7 +15,7 @@ def create_document(
         user_id=user_id,
         filename=filename,
         raw_text=raw_text,
-        pages=pages,
+        token_count=token_count,
         language=language
     )
     session.add(document)

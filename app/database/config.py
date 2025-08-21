@@ -14,12 +14,16 @@ class Settings(BaseSettings):
     RABBITMQ_PORT: Optional[int] = None
     RABBITMQ_DEFAULT_USER: Optional[str] = None
     RABBITMQ_DEFAULT_PASS: Optional[str] = None
+    POSTGRES_DB: Optional[str] = None
+    POSTGRES_USER: Optional[str] = None
+    POSTGRES_PASSWORD: Optional[str] = None
+    API_ANALITICS: Optional[str] = None
+    HUGGINGFACE_API_TOKEN: Optional[str] = None
 
     @property
     def DATABASE_URL_asyncpg(self):
         return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
     
-    @property
     @property
     def DATABASE_URL_psycopg(self):
         return f'postgresql+psycopg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'

@@ -38,7 +38,7 @@ def create_risk_histogram(jobs: List[Dict[str, Any]]) -> go.Figure:
     risk_scores = []
     for job in jobs:
         if job.get('risk_score') is not None:
-            risk_scores.append(job['risk_score'] * 100)  # Переводим в проценты
+            risk_scores.append(job['risk_score'] * 100) 
     
     if not risk_scores:
         return None
@@ -65,12 +65,11 @@ def create_cost_timeline(jobs: List[Dict[str, Any]]) -> go.Figure:
     if not jobs:
         return None
     
-    # Фильтруем задания с датами и стоимостью
     timeline_data = []
     for job in jobs:
         if job.get('started_at') and job.get('used_credits'):
             timeline_data.append({
-                'date': job['started_at'][:10],  # Берем только дату
+                'date': job['started_at'][:10],
                 'cost': float(job['used_credits']),
                 'status': job.get('status', 'UNKNOWN')
             })
@@ -80,8 +79,7 @@ def create_cost_timeline(jobs: List[Dict[str, Any]]) -> go.Figure:
     
     df = pd.DataFrame(timeline_data)
     df['date'] = pd.to_datetime(df['date'])
-    
-    # Группируем по дате и суммируем затраты
+
     daily_costs = df.groupby('date')['cost'].sum().reset_index()
     
     fig = px.line(
@@ -106,7 +104,7 @@ def create_risk_gauge(average_risk: float) -> go.Figure:
     """Создать датчик среднего риска"""
     fig = go.Figure(go.Indicator(
         mode = "gauge+number+delta",
-        value = average_risk * 100,  # Переводим в проценты
+        value = average_risk * 100, 
         domain = {'x': [0, 1], 'y': [0, 1]},
         title = {'text': "⚠️ Средний риск-индекс (%)"},
         delta = {'reference': 50},
@@ -135,16 +133,16 @@ def display_job_metrics(jobs: List[Dict[str, Any]]):
         st.info("📭 Нет данных для отображения")
         return
     
-    # Подсчет статистики
+
     total_jobs = len(jobs)
-    completed_jobs = len([j for j in jobs if j.get('status') == 'COMPLETED'])
+    completed_jobs = len([j for j in jobs if j.get('status') in ['COMPLETED', 'DONE']])
     total_cost = sum([float(j.get('used_credits', 0)) for j in jobs])
     
-    # Средний риск
+
     risk_scores = [j.get('risk_score') for j in jobs if j.get('risk_score') is not None]
     avg_risk = sum(risk_scores) / len(risk_scores) if risk_scores else 0
     
-    # Отображаем метрики
+
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -179,20 +177,16 @@ def display_wallet_chart(transactions: List[Dict[str, Any]]):
         st.info("📭 Нет транзакций для отображения")
         return
     
-    # Подготавливаем данные
     df = pd.DataFrame(transactions)
     df['date'] = pd.to_datetime(df['trans_time']).dt.date
-    # Преобразуем amount в число
     df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0)
     df['amount_signed'] = df.apply(
         lambda row: row['amount'] if row['tx_type'] == 'CREDIT' else -row['amount'], 
         axis=1
     )
     
-    # Группируем по дням и типу транзакций
     daily_transactions = df.groupby(['date', 'tx_type'])['amount'].sum().reset_index()
     
-    # Создаем график
     fig = px.bar(
         daily_transactions,
         x='date',
@@ -218,7 +212,8 @@ def display_wallet_chart(transactions: List[Dict[str, Any]]):
 def format_status_badge(status: str) -> str:
     """Format status with monochrome badge"""
     symbols = {
-        'COMPLETED': '●',
+        'DONE': '●',
+        'COMPLETED': '●', 
         'ERROR': '○',
         'PROCESSING': '◐',
         'QUEUED': '◯'
@@ -249,7 +244,6 @@ def show_job_summary_card(job: Dict[str, Any]):
             cost = job.get('used_credits', 0)
             st.metric("💰 Стоимость", f"{cost}₽")
         
-        # Показываем сводку если есть
         if job.get('summary_text'):
             with st.expander(f"📋 Результаты анализа #{job['id']}", expanded=False):
                 st.text_area(
