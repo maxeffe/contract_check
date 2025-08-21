@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Query, File, UploadFile
+from fastapi import APIRouter, HTTPException, status, Depends, Query, File, UploadFile, Form
+from typing import Dict, Any, List, Optional, Union
 from services.crud import document as DocumentService
 from services.crud import mljob as MLJobService
 from services.crud import model as ModelService
 from services.prediction_service import process_prediction_request
+from services.document_processor import document_processor
 from database.database import get_session
 from schemas.prediction import (
     PredictionRequest, 
@@ -49,7 +51,7 @@ async def create_prediction(
             "document_id": result["document_id"],
             "status": result["status"],
             "cost": result["cost"],
-            "pages_processed": result["pages_processed"]
+            "tokens_processed": result["tokens_processed"]
         }
         
     except ValueError as e:
@@ -71,7 +73,7 @@ async def create_prediction(
 @prediction_route.post('/predict/upload')
 async def predict_from_file(
     file: UploadFile = File(...),
-    language: Optional[str] = "UNKNOWN",
+    language: Optional[str] = Form("RU"),
     current_user=Depends(get_current_user),
     session=Depends(get_session)
 ) -> dict:
@@ -90,10 +92,28 @@ async def predict_from_file(
     try:
         contents = await file.read()
         
-        if file.content_type == 'text/plain':
-            text = contents.decode('utf-8')
-        else:
-            text = f"Mock text extraction from {file.filename}. " * 100
+        is_valid, validation_message = document_processor.validate_file(contents, file.filename)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=validation_message
+            )
+        
+        text, processed_successfully = document_processor.process_file(contents, file.filename)
+        
+        if not processed_successfully or not text:
+            error_message = "Не удалось обработать файл. "
+            if file.content_type == 'application/pdf':
+                error_message += "Требуется PyPDF2. Установите: pip install PyPDF2"
+            elif file.content_type in ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
+                error_message += "Требуется python-docx и docx2txt. Установите: pip install python-docx docx2txt"
+            else:
+                error_message += "Возможно, файл поврежден или пустой."
+            
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=error_message
+            )
         
         result = process_prediction_request(
             user_id=current_user["user_id"],
@@ -112,7 +132,7 @@ async def predict_from_file(
             "document_id": result["document_id"],
             "status": result["status"],
             "cost": result["cost"],
-            "pages_processed": result["pages_processed"]
+            "tokens_processed": result["tokens_processed"]
         }
         
     except ValueError as e:
@@ -265,10 +285,78 @@ async def get_available_models(
         ModelResponse(
             id=model.id,
             name=model.name,
-            price_per_page=model.price_per_page,
+            price_per_token=model.price_per_token,
             active=model.active
         ) for model in models
     ]
+
+from pydantic import BaseModel
+from fastapi import Request as FastAPIRequest
+
+class EstimateRequest(BaseModel):
+    document_text: str
+
+@prediction_route.post('/estimate')  
+async def estimate_cost(
+    request: FastAPIRequest,
+    current_user=Depends(get_current_user),
+    session=Depends(get_session)
+) -> Dict[str, Any]:
+    """Предварительная оценка стоимости анализа"""
+    
+    try:
+        text = None
+        
+        content_type = request.headers.get("content-type", "")
+        
+        if "multipart/form-data" in content_type:
+            form = await request.form()
+            if "file" in form:
+                file = form["file"]
+                contents = await file.read()
+                
+                is_valid, validation_message = document_processor.validate_file(contents, file.filename)
+                if not is_valid:
+                    raise HTTPException(status_code=400, detail=validation_message)
+                
+                text, processed_successfully = document_processor.process_file(contents, file.filename)
+                
+                if not processed_successfully or not text:
+                    raise HTTPException(
+                        status_code=422, 
+                        detail="Не удалось обработать файл. Возможно, требуются дополнительные библиотеки или файл поврежден."
+                    )
+        
+        elif "application/json" in content_type:
+            try:
+                body = await request.json()
+                if "document_text" in body and body["document_text"]:
+                    text = body["document_text"]
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
+        
+        if not text:
+            raise HTTPException(status_code=400, detail="No text or file provided")
+        
+        from models.document import Document
+        token_count = Document.count_tokens(text)
+        
+        models = ModelService.get_active_models(session)
+        if not models:
+            raise HTTPException(status_code=404, detail="No models available")
+        
+        model = models[0] 
+        cost = token_count * model.price_per_token
+        
+        return {
+            "token_count": token_count,
+            "estimated_cost": float(cost),
+            "model_name": model.name,
+            "price_per_token": float(model.price_per_token)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Estimation failed: {str(e)}")
 
 @prediction_route.get('/jobs/{job_id}')
 async def get_job_details(

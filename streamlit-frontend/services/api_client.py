@@ -10,9 +10,6 @@ class APIClient:
     def __init__(self, base_url: str = None):
         self.base_url = base_url or os.getenv("API_BASE_URL", "http://localhost:8000")
         self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/json',
-        })
     
     def _get_auth_headers(self) -> Dict[str, str]:
         """Получить заголовки с токеном авторизации"""
@@ -21,20 +18,23 @@ class APIClient:
             headers["Authorization"] = f"Bearer {st.session_state.access_token}"
         return headers
     
-    def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
+    def _handle_response(self, response: requests.Response, is_login: bool = False) -> Dict[str, Any]:
         """Обработка ответа API"""
         if response.status_code == 401:
-            # Отладочная информация
-            st.error(f"🔒 Ошибка авторизации при запросе: {response.url}")
-            st.error(f"Токен в сессии: {'Есть' if hasattr(st.session_state, 'access_token') and st.session_state.access_token else 'Нет'}")
-            
-            # Очищаем сессию при 401 ошибке
-            if hasattr(st.session_state, 'access_token'):
-                del st.session_state.access_token
-            if hasattr(st.session_state, 'user_info'):
-                del st.session_state.user_info
-            st.error("🔒 Сессия истекла. Пожалуйста, войдите заново.")
-            st.stop()
+            if is_login:
+                try:
+                    error_data = response.json()
+                    error_detail = error_data.get("detail", "Неверные данные для входа")
+                except:
+                    error_detail = "Неверные данные для входа"
+                raise requests.HTTPError(error_detail)
+            else:
+                if hasattr(st.session_state, 'access_token'):
+                    del st.session_state.access_token
+                if hasattr(st.session_state, 'user_info'):
+                    del st.session_state.user_info
+                st.error("🔒 Сессия истекла. Пожалуйста, войдите заново.")
+                st.stop()
         
         if not response.ok:
             try:
@@ -46,25 +46,28 @@ class APIClient:
         
         return response.json()
     
-    # === АУТЕНТИФИКАЦИЯ ===
+
     def login(self, username: str, password: str) -> Dict[str, Any]:
         """Авторизация пользователя"""
         data = {
-            "email": username,  # API ожидает email, а не username
+            "email": username,
             "password": password
         }
+        headers = {'Content-Type': 'application/json'}
         response = self.session.post(
             f"{self.base_url}/auth/signin",
             json=data,
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
-        return self._handle_response(response)
+        return self._handle_response(response, is_login=True)
     
     def register(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Регистрация нового пользователя"""
+        headers = {'Content-Type': 'application/json'}
         response = self.session.post(
             f"{self.base_url}/auth/signup",
-            json=user_data
+            json=user_data,
+            headers=headers
         )
         return self._handle_response(response)
     
@@ -76,7 +79,6 @@ class APIClient:
         )
         return self._handle_response(response)
     
-    # === ПРЕДСКАЗАНИЯ ===
     def create_prediction(self, prediction_data: Dict[str, Any]) -> Dict[str, Any]:
         """Создать новое предсказание"""
         headers = {'Content-Type': 'application/json'}
@@ -91,10 +93,26 @@ class APIClient:
     
     def upload_file_prediction(self, file_content: bytes, filename: str, language: str = "UNKNOWN") -> Dict[str, Any]:
         """Загрузить файл для анализа"""
-        files = {"file": (filename, file_content)}
+        if not file_content:
+            raise ValueError("File content is empty or None")
+        
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(filename)
+        if not content_type:
+            if filename.lower().endswith('.txt'):
+                content_type = 'text/plain'
+            elif filename.lower().endswith('.pdf'):
+                content_type = 'application/pdf'
+            elif filename.lower().endswith('.doc'):
+                content_type = 'application/msword'
+            elif filename.lower().endswith('.docx'):
+                content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            else:
+                content_type = 'application/octet-stream'
+        
+        files = {"file": (filename, file_content, content_type)}
         data = {"language": language}
         
-        # Для multipart/form-data убираем Content-Type из заголовков
         headers = self._get_auth_headers()
         
         response = self.session.post(
@@ -129,6 +147,41 @@ class APIClient:
         )
         return self._handle_response(response)
     
+    def estimate_cost(self, text: str = None, file_content: bytes = None, filename: str = None) -> Dict[str, Any]:
+        """Получить точную оценку стоимости анализа"""
+        headers = self._get_auth_headers()
+        
+        if file_content and filename:
+            import mimetypes
+            content_type, _ = mimetypes.guess_type(filename)
+            if not content_type:
+                if filename.lower().endswith('.txt'):
+                    content_type = 'text/plain'
+                elif filename.lower().endswith('.pdf'):
+                    content_type = 'application/pdf'
+                elif filename.lower().endswith('.doc'):
+                    content_type = 'application/msword'
+                elif filename.lower().endswith('.docx'):
+                    content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                else:
+                    content_type = 'application/octet-stream'
+            
+            files = {"file": (filename, file_content, content_type)}
+            response = self.session.post(
+                f"{self.base_url}/estimate",
+                files=files,
+                headers=headers
+            )
+        else:
+            headers['Content-Type'] = 'application/json'
+            response = self.session.post(
+                f"{self.base_url}/estimate",
+                json={"document_text": text or ""},
+                headers=headers
+            )
+        
+        return self._handle_response(response)
+    
     def get_user_documents(self, skip: int = 0, limit: int = 10) -> Dict[str, Any]:
         """Получить документы пользователя"""
         response = self.session.get(
@@ -137,7 +190,6 @@ class APIClient:
         )
         return self._handle_response(response)
     
-    # === КОШЕЛЕК ===
     def get_wallet_info(self) -> Dict[str, Any]:
         """Получить информацию о кошельке"""
         response = self.session.get(
@@ -166,7 +218,6 @@ class APIClient:
         )
         return self._handle_response(response)
 
-# Глобальный экземпляр клиента
 @st.cache_resource
 def get_api_client():
     """Получить синглтон API клиента"""

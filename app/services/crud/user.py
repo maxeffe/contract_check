@@ -34,7 +34,6 @@ def get_user_by_username(username: str, session: Session) -> Optional[User]:
 
 def create_user(user_data: dict, session: Session) -> User:
     """Создать нового пользователя"""
-    # Хешируем пароль перед сохранением
     if 'password' in user_data:
         user_data['password'] = User.hash_password(user_data['password'])
     
@@ -51,7 +50,6 @@ def update_user(user_id: int, user_data: dict, session: Session) -> Optional[Use
     if not user:
         return None
     
-    # Хешируем пароль если он обновляется
     if 'password' in user_data:
         user_data['password'] = User.hash_password(user_data['password'])
     

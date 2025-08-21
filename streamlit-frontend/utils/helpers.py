@@ -8,7 +8,6 @@ def format_datetime(date_string: str) -> str:
         return "N/A"
     
     try:
-        # Парсим ISO формат даты
         dt = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
         return dt.strftime('%d.%m.%Y %H:%M')
     except:
@@ -35,17 +34,24 @@ def get_status_color(status: str) -> str:
 def get_status_emoji(status: str) -> str:
     """Получить эмодзи для статуса"""
     emojis = {
-        'COMPLETED': '✅',
+        'DONE': '✅',
+        'COMPLETED': '✅', 
         'ERROR': '❌',
         'PROCESSING': '🔄',
         'QUEUED': '⏳'
     }
     return emojis.get(status, '❓')
 
+def calculate_tokens_from_text(text: str) -> int:
+    """Рассчитать количество токенов из текста"""
+    import re
+    clean_text = re.sub(r'\s+', ' ', text.strip())
+    return max(1, len(clean_text) // 4)
+
 def calculate_pages_from_text(text: str) -> int:
-    """Рассчитать примерное количество страниц из текста"""
-    word_count = len(text.split())
-    return max(1, word_count // 500)  # Примерно 500 слов на страницу
+    """Рассчитать примерное количество страниц из текста (для обратной совместимости)"""
+    char_count = len(text.strip())
+    return max(1, char_count // 2000)
 
 def validate_file_size(file_content: bytes, max_size_mb: int = 10) -> bool:
     """Проверить размер файла"""
@@ -66,7 +72,6 @@ def show_success_message(message: str, duration: int = 3):
     """Показать сообщение об успехе"""
     placeholder = st.empty()
     placeholder.success(message)
-    # В реальном приложении здесь можно добавить таймер
 
 def show_error_message(message: str):
     """Показать сообщение об ошибке"""
@@ -93,6 +98,7 @@ def create_download_button(data: str, filename: str, mime_type: str = "text/plai
 def format_job_status_text(status: str) -> str:
     """Форматировать текст статуса задания"""
     status_texts = {
+        'DONE': 'Завершено',
         'COMPLETED': 'Завершено',
         'ERROR': 'Ошибка',
         'PROCESSING': 'Обрабатывается',
@@ -104,7 +110,6 @@ def get_language_name(language_code: str) -> str:
     """Получить название языка по коду"""
     languages = {
         'RU': '🇷🇺 Русский',
-        'EN': '🇺🇸 English',
         'UNKNOWN': '🌐 Автоопределение'
     }
     return languages.get(language_code, language_code)
@@ -122,10 +127,28 @@ def estimate_analysis_cost(text_length: int, model_price: float) -> float:
     pages = calculate_pages_from_text_length(text_length)
     return pages * model_price
 
-def calculate_pages_from_text_length(text_length: int) -> int:
-    """Рассчитать страницы по длине текста"""
-    # Примерно 2000 символов на страницу
-    return max(1, text_length // 2000)
+def calculate_tokens_from_file_size(file_size: int, file_extension: str) -> int:
+    """Рассчитать токены по размеру файла с учетом типа"""
+    if file_extension.lower() in ['docx', 'doc']:
+        estimated_text_size = file_size // 7
+    elif file_extension.lower() == 'pdf':
+        estimated_text_size = file_size // 7
+    else:
+        estimated_text_size = file_size
+    
+    return max(1, estimated_text_size // 4)
+
+def calculate_pages_from_file_size(file_size: int, file_extension: str) -> int:
+    """Рассчитать страницы по размеру файла с учетом типа (для обратной совместимости)"""
+    if file_extension.lower() in ['docx', 'doc']:
+        estimated_text_size = file_size // 7
+    elif file_extension.lower() == 'pdf':
+        estimated_text_size = file_size // 7
+    else:
+
+        estimated_text_size = file_size
+    
+    return max(1, estimated_text_size // 2000)
 
 def format_file_size(size_bytes: int) -> str:
     """Форматировать размер файла"""

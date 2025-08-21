@@ -8,7 +8,7 @@ class PredictionRequest(BaseModel):
     
     document_text: str = Field(..., min_length=10, max_length=1000000, description="Текст документа (10-1000000 символов)")
     filename: Optional[str] = Field(None, max_length=255, description="Имя файла")
-    language: Optional[str] = Field("UNKNOWN", pattern="^(RU|EN|UNKNOWN)$", description="Язык документа")
+    language: Optional[str] = Field("RU", pattern="^RU$", description="Язык документа (только русский)")
     model_name: Optional[str] = Field("default_model", max_length=100, description="Название модели")
     summary_depth: Optional[str] = Field("BULLET", pattern="^(BULLET|DETAILED)$", description="Глубина анализа")
 
@@ -37,7 +37,7 @@ class DocumentResponse(BaseModel):
     id: int
     user_id: int
     filename: str
-    pages: int
+    pages: int 
     language: str
     uploaded_at: datetime
 
@@ -53,5 +53,5 @@ class PredictionJobResponse(BaseModel):
 class ModelResponse(BaseModel):
     id: int
     name: str
-    price_per_page: int
+    price_per_token: float
     active: bool

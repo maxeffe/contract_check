@@ -58,10 +58,14 @@ async def get_wallet(
 ) -> WalletResponse:
     """Получить информацию о кошельке"""
     wallet = WalletService.get_or_create_wallet(current_user["user_id"], session)
+    
+    total_transactions = WalletService.count_user_transactions(current_user["user_id"], session)
+    
     return WalletResponse(
         id=wallet.id,
         user_id=wallet.user_id,
-        balance=wallet.balance
+        balance=wallet.balance,
+        total_transactions=total_transactions
     )
 
 @wallet_route.get('/transactions')

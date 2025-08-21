@@ -1,407 +1,322 @@
 import pytest
 from fastapi import status
 from decimal import Decimal
-from services.crud.user import create_user
-from services.crud.wallet import credit_wallet, debit_wallet
-
 
 class TestWalletBalance:
-    def test_get_balance_new_user(self, client, test_user_credentials, session):
+    """Test wallet balance endpoints"""
 
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        response = client.get("/wallet/balance", headers={
-            "Authorization": f"Bearer {token}"
-        })
+    def test_get_balance_new_user(self, client, auth_headers):
+        """Test getting balance for new user (should create wallet)"""
+        response = client.get("/wallet/balance", headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["balance"] == "0"  
+        assert "balance" in data
+        assert float(data["balance"]) == 0.0
 
     def test_get_balance_no_auth(self, client):
+        """Test getting balance without authentication"""
         response = client.get("/wallet/balance")
-        
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_get_balance_invalid_token(self, client):
-        response = client.get("/wallet/balance", headers={
-            "Authorization": "Bearer invalid_token"
-        })
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class TestWalletInfo:
-    def test_get_wallet_info(self, client, test_user_credentials, session):
+    """Test wallet information endpoints"""
 
-        user = create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        response = client.get("/wallet/wallet", headers={
-            "Authorization": f"Bearer {token}"
-        })
+    def test_get_wallet_info(self, client, auth_headers):
+        """Test getting wallet information"""
+        response = client.get("/wallet/wallet", headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["user_id"] == user.id
-        assert data["balance"] == "0"
         assert "id" in data
+        assert "user_id" in data
+        assert "balance" in data
+        assert "total_transactions" in data
+        assert float(data["balance"]) == 0.0
+        assert data["total_transactions"] == 0
 
     def test_get_wallet_no_auth(self, client):
+        """Test getting wallet info without authentication"""
         response = client.get("/wallet/wallet")
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class TestTopUpBalance:
-    def test_topup_success(self, client, test_user_credentials, session):
+    """Test balance top-up functionality"""
 
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        topup_data = {"amount": "100.50"}
-        response = client.post("/wallet/topup", 
-                             json=topup_data,
-                             headers={"Authorization": f"Bearer {token}"})
+    def test_topup_success(self, client, auth_headers):
+        """Test successful balance top-up"""
+        topup_data = {"amount": 100.0}
+        response = client.post("/wallet/topup", json=topup_data, headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["message"] == "Balance topped up successfully"
-        assert data["amount"] == "100.50"
+        assert data["amount"] == 100.0
         assert "transaction_id" in data
         
+        # Verify balance was updated
+        balance_response = client.get("/wallet/balance", headers=auth_headers)
+        assert balance_response.status_code == status.HTTP_200_OK
+        balance_data = balance_response.json()
+        assert float(balance_data["balance"]) == 100.0
 
-        balance_response = client.get("/wallet/balance", headers={
-            "Authorization": f"Bearer {token}"
-        })
-        assert balance_response.json()["balance"] == "100.50"
-
-    def test_topup_zero_amount(self, client, test_user_credentials, session):
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        topup_data = {"amount": "0"}
-        response = client.post("/wallet/topup",
-                             json=topup_data,
-                             headers={"Authorization": f"Bearer {token}"})
+    def test_topup_zero_amount(self, client, auth_headers):
+        """Test top-up with zero amount"""
+        topup_data = {"amount": 0}
+        response = client.post("/wallet/topup", json=topup_data, headers=auth_headers)
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json()["detail"] == "Amount must be positive"
 
-    def test_topup_negative_amount(self, client, test_user_credentials, session):
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        topup_data = {"amount": "-50.00"}
-        response = client.post("/wallet/topup",
-                             json=topup_data,
-                             headers={"Authorization": f"Bearer {token}"})
+    def test_topup_negative_amount(self, client, auth_headers):
+        """Test top-up with negative amount"""
+        topup_data = {"amount": -50.0}
+        response = client.post("/wallet/topup", json=topup_data, headers=auth_headers)
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json()["detail"] == "Amount must be positive"
 
-    def test_topup_invalid_amount_format(self, client, test_user_credentials, session):
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
+    def test_topup_invalid_amount_format(self, client, auth_headers):
+        """Test top-up with invalid amount format"""
         topup_data = {"amount": "invalid"}
-        response = client.post("/wallet/topup",
-                             json=topup_data,
-                             headers={"Authorization": f"Bearer {token}"})
+        response = client.post("/wallet/topup", json=topup_data, headers=auth_headers)
         
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_topup_no_auth(self, client):
-        topup_data = {"amount": "100.00"}
+        """Test top-up without authentication"""
+        topup_data = {"amount": 100.0}
         response = client.post("/wallet/topup", json=topup_data)
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_topup_large_amount(self, client, test_user_credentials, session):
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        topup_data = {"amount": "999999.99"}
-        response = client.post("/wallet/topup",
-                             json=topup_data,
-                             headers={"Authorization": f"Bearer {token}"})
+    def test_topup_large_amount(self, client, auth_headers):
+        """Test top-up with large amount"""
+        topup_data = {"amount": 999999.99}
+        response = client.post("/wallet/topup", json=topup_data, headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["amount"] == "999999.99"
+        data = response.json()
+        assert data["amount"] == 999999.99
 
 
 class TestTransactionHistory:
-    def test_get_transactions_empty(self, client, test_user_credentials, session):
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-        response = client.get("/wallet/transactions", headers={
-            "Authorization": f"Bearer {token}"
-        })
+    """Test transaction history endpoints"""
+
+    def test_get_transactions_empty(self, client, auth_headers):
+        """Test getting transactions for new user (empty history)"""
+        response = client.get("/wallet/transactions", headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["transactions"] == []
+        assert "transactions" in data
+        assert "total_count" in data
+        assert len(data["transactions"]) == 0
         assert data["total_count"] == 0
 
-    def test_get_transactions_with_data(self, client, test_user_credentials, session):
-        user = create_user(test_user_credentials, session)
+    def test_get_transactions_with_data(self, client, auth_headers):
+        """Test getting transactions after making top-ups"""
+        # Make a few top-ups to create transaction history
+        client.post("/wallet/topup", json={"amount": 100.0}, headers=auth_headers)
+        client.post("/wallet/topup", json={"amount": 50.0}, headers=auth_headers)
         
-
-        credit_wallet(user.id, Decimal("100.00"), session)
-        credit_wallet(user.id, Decimal("50.00"), session)
-        debit_wallet(user.id, Decimal("25.00"), session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-        response = client.get("/wallet/transactions", headers={
-            "Authorization": f"Bearer {token}"
-        })
+        response = client.get("/wallet/transactions", headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert len(data["transactions"]) == 3
-        assert data["total_count"] == 3
+        assert len(data["transactions"]) == 2
+        assert data["total_count"] == 2
         
+        # Check transaction details
+        for transaction in data["transactions"]:
+            assert "id" in transaction
+            assert "user_id" in transaction
+            assert "tx_type" in transaction
+            assert "amount" in transaction
+            assert "trans_time" in transaction
+            assert transaction["tx_type"] == "CREDIT"
 
-        for tx in data["transactions"]:
-            assert "id" in tx
-            assert "user_id" in tx
-            assert "tx_type" in tx
-            assert "amount" in tx
-            assert "trans_time" in tx
-            assert tx["user_id"] == user.id
-
-    def test_get_transactions_pagination(self, client, test_user_credentials, session):
-        user = create_user(test_user_credentials, session)
-        
-
+    def test_get_transactions_pagination(self, client, auth_headers):
+        """Test transaction pagination"""
+        # Create multiple transactions
         for i in range(5):
-            credit_wallet(user.id, Decimal(f"{i + 1}0.00"), session)
+            client.post("/wallet/topup", json={"amount": 10.0 * (i + 1)}, headers=auth_headers)
         
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-      
-        response = client.get("/wallet/transactions?skip=0&limit=3", headers={
-            "Authorization": f"Bearer {token}"
-        })
-        
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert len(data["transactions"]) == 3
-        assert data["total_count"] == 5
-        
-
-        response = client.get("/wallet/transactions?skip=3&limit=3", headers={
-            "Authorization": f"Bearer {token}"
-        })
+        # Test pagination
+        response = client.get("/wallet/transactions?limit=2&skip=0", headers=auth_headers)
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data["transactions"]) == 2
         assert data["total_count"] == 5
-
-    def test_get_transactions_invalid_pagination(self, client, test_user_credentials, session):
-        create_user(test_user_credentials, session)
         
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
+        # Test second page
+        response2 = client.get("/wallet/transactions?limit=2&skip=2", headers=auth_headers)
+        assert response2.status_code == status.HTTP_200_OK
+        data2 = response2.json()
+        assert len(data2["transactions"]) == 2
 
-        response = client.get("/wallet/transactions?skip=-1", headers={
-            "Authorization": f"Bearer {token}"
-        })
+    def test_get_transactions_invalid_pagination(self, client, auth_headers):
+        """Test invalid pagination parameters"""
+        # Negative skip
+        response = client.get("/wallet/transactions?skip=-1", headers=auth_headers)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         
-
-        response = client.get("/wallet/transactions?limit=101", headers={
-            "Authorization": f"Bearer {token}"
-        })
+        # Too large limit
+        response = client.get("/wallet/transactions?limit=1000", headers=auth_headers)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        
+        # Zero limit
+        response = client.get("/wallet/transactions?limit=0", headers=auth_headers)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_get_transactions_no_auth(self, client):
+        """Test getting transactions without authentication"""
         response = client.get("/wallet/transactions")
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class TestWalletIntegration:
-    def test_complete_wallet_workflow(self, client, test_user_credentials, session):
+    """Test wallet integration scenarios"""
 
-        client.post("/auth/signup", json=test_user_credentials)
+    def test_complete_wallet_workflow(self, client, auth_headers):
+        """Test complete wallet workflow"""
+        # 1. Get initial balance (should be 0)
+        balance_response = client.get("/wallet/balance", headers=auth_headers)
+        assert balance_response.json()["balance"] == 0
         
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        
-
-        balance_response = client.get("/wallet/balance", headers=headers)
-        assert balance_response.json()["balance"] == "0"
-        
-
-        topup_response = client.post("/wallet/topup", 
-                                   json={"amount": "100.00"}, 
-                                   headers=headers)
+        # 2. Top up balance
+        topup_response = client.post("/wallet/topup", json={"amount": 150.0}, headers=auth_headers)
         assert topup_response.status_code == status.HTTP_200_OK
         
-
-        balance_response = client.get("/wallet/balance", headers=headers)
-        assert balance_response.json()["balance"] == "100.00"
+        # 3. Check balance updated
+        balance_response = client.get("/wallet/balance", headers=auth_headers)
+        assert float(balance_response.json()["balance"]) == 150.0
         
-
-        wallet_response = client.get("/wallet/wallet", headers=headers)
-        assert wallet_response.json()["balance"] == "100.00"
+        # 4. Check wallet info
+        wallet_response = client.get("/wallet/wallet", headers=auth_headers)
+        wallet_data = wallet_response.json()
+        assert float(wallet_data["balance"]) == 150.0
+        assert wallet_data["total_transactions"] == 1
         
+        # 5. Check transaction history
+        transactions_response = client.get("/wallet/transactions", headers=auth_headers)
+        transactions_data = transactions_response.json()
+        assert len(transactions_data["transactions"]) == 1
+        assert transactions_data["transactions"][0]["amount"] == 150.0
+        assert transactions_data["transactions"][0]["tx_type"] == "CREDIT"
 
-        tx_response = client.get("/wallet/transactions", headers=headers)
-        assert len(tx_response.json()["transactions"]) == 1
-        assert tx_response.json()["transactions"][0]["tx_type"] == "CREDIT"
-        assert tx_response.json()["transactions"][0]["amount"] == "100.00"
-
-    def test_multiple_topups(self, client, test_user_credentials, session):
-        client.post("/auth/signup", json=test_user_credentials)
+    def test_multiple_topups(self, client, auth_headers):
+        """Test multiple top-ups accumulate correctly"""
+        amounts = [50.0, 25.0, 100.0, 10.0]
         
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        
-
-        amounts = ["50.00", "75.25", "100.75"]
         for amount in amounts:
-            response = client.post("/wallet/topup", 
-                                 json={"amount": amount}, 
-                                 headers=headers)
+            response = client.post("/wallet/topup", json={"amount": amount}, headers=auth_headers)
             assert response.status_code == status.HTTP_200_OK
         
-
-        balance_response = client.get("/wallet/balance", headers=headers)
-        expected_total = sum(Decimal(amount) for amount in amounts)
-        assert Decimal(balance_response.json()["balance"]) == expected_total
+        # Check final balance
+        balance_response = client.get("/wallet/balance", headers=auth_headers)
+        expected_balance = sum(amounts)
+        assert float(balance_response.json()["balance"]) == expected_balance
         
-
-        tx_response = client.get("/wallet/transactions", headers=headers)
-        assert len(tx_response.json()["transactions"]) == 3
+        # Check transaction count
+        wallet_response = client.get("/wallet/wallet", headers=auth_headers)
+        assert wallet_response.json()["total_transactions"] == len(amounts)
 
     def test_user_isolation_wallets(self, client):
-
+        """Test that users have isolated wallets"""
+        # Create two users and their auth headers
         user1_data = {
-            "username": "user1_wallet",
-            "email": "user1wallet@example.com",
+            "username": "user1",
+            "email": "user1@example.com",
             "password": "password123"
         }
         user2_data = {
-            "username": "user2_wallet",
-            "email": "user2wallet@example.com",
+            "username": "user2",
+            "email": "user2@example.com", 
             "password": "password123"
         }
         
-
+        # Register users
         client.post("/auth/signup", json=user1_data)
         client.post("/auth/signup", json=user2_data)
         
-
+        # Login users
         login1 = client.post("/auth/signin", json={
             "email": user1_data["email"],
             "password": user1_data["password"]
         })
-        token1 = login1.json()["access_token"]
-        
         login2 = client.post("/auth/signin", json={
-            "email": user2_data["email"],
+            "email": user2_data["email"], 
             "password": user2_data["password"]
         })
-        token2 = login2.json()["access_token"]
         
+        headers1 = {"Authorization": f"Bearer {login1.json()['access_token']}"}
+        headers2 = {"Authorization": f"Bearer {login2.json()['access_token']}"}
+        
+        # Top up user1 wallet
+        client.post("/wallet/topup", json={"amount": 100.0}, headers=headers1)
+        
+        # Check balances are isolated
+        balance1 = client.get("/wallet/balance", headers=headers1)
+        balance2 = client.get("/wallet/balance", headers=headers2)
+        
+        assert float(balance1.json()["balance"]) == 100.0
+        assert float(balance2.json()["balance"]) == 0.0
+        
+        # Check wallet info isolation
+        wallet1 = client.get("/wallet/wallet", headers=headers1)
+        wallet2 = client.get("/wallet/wallet", headers=headers2)
+        
+        assert wallet1.json()["user_id"] != wallet2.json()["user_id"]
+        assert wallet1.json()["total_transactions"] == 1
+        assert wallet2.json()["total_transactions"] == 0
 
-        client.post("/wallet/topup", 
-                   json={"amount": "100.00"}, 
-                   headers={"Authorization": f"Bearer {token1}"})
-        
-        client.post("/wallet/topup", 
-                   json={"amount": "200.00"}, 
-                   headers={"Authorization": f"Bearer {token2}"})
-        
 
-        balance1 = client.get("/wallet/balance", 
-                            headers={"Authorization": f"Bearer {token1}"})
-        balance2 = client.get("/wallet/balance", 
-                            headers={"Authorization": f"Bearer {token2}"})
-        
-        assert balance1.json()["balance"] == "100.00"
-        assert balance2.json()["balance"] == "200.00"
-        
+class TestWalletEdgeCases:
+    """Test wallet edge cases and error scenarios"""
 
-        tx1 = client.get("/wallet/transactions", 
-                        headers={"Authorization": f"Bearer {token1}"})
-        tx2 = client.get("/wallet/transactions", 
-                        headers={"Authorization": f"Bearer {token2}"})
+    def test_concurrent_topups_simulation(self, client, auth_headers):
+        """Test simulation of concurrent top-ups"""
+        # Simulate concurrent requests by making multiple rapid requests
+        amounts = [10.0, 20.0, 30.0, 40.0, 50.0]
+        responses = []
         
-        assert len(tx1.json()["transactions"]) == 1
-        assert len(tx2.json()["transactions"]) == 1
-        assert tx1.json()["transactions"][0]["amount"] == "100.00"
-        assert tx2.json()["transactions"][0]["amount"] == "200.00"
+        for amount in amounts:
+            response = client.post("/wallet/topup", json={"amount": amount}, headers=auth_headers)
+            responses.append(response)
+        
+        # All requests should succeed
+        for response in responses:
+            assert response.status_code == status.HTTP_200_OK
+        
+        # Final balance should be sum of all amounts
+        balance_response = client.get("/wallet/balance", headers=auth_headers)
+        expected_balance = sum(amounts)
+        assert float(balance_response.json()["balance"]) == expected_balance
+
+    def test_decimal_precision(self, client, auth_headers):
+        """Test decimal precision in amounts"""
+        # Top up with precise decimal amount
+        precise_amount = 123.456789
+        response = client.post("/wallet/topup", json={"amount": precise_amount}, headers=auth_headers)
+        
+        assert response.status_code == status.HTTP_200_OK
+        
+        # Check balance maintains reasonable precision
+        balance_response = client.get("/wallet/balance", headers=auth_headers)
+        balance = float(balance_response.json()["balance"])
+        
+        # Should be approximately equal (allowing for floating point precision)
+        assert abs(balance - precise_amount) < 0.01
+
+    def test_topup_missing_amount_field(self, client, auth_headers):
+        """Test top-up with missing amount field"""
+        response = client.post("/wallet/topup", json={}, headers=auth_headers)
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

@@ -3,10 +3,9 @@ import sys
 import os
 import pandas as pd
 
-# Добавляем родительскую директорию в путь Python
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.auth_service import check_authentication, show_user_info
+from services.auth_service import check_authentication, show_user_info, init_session_state
 from services.api_client import get_api_client
 from utils.helpers import (
     format_datetime, format_currency, format_percentage,
@@ -20,87 +19,22 @@ from components.visualization import (
 from utils.style_loader import load_theme
 from datetime import datetime
 
-# Загружаем тему для скрытия Streamlit элементов
+
 load_theme()
 
-# ИСПРАВЛЕНИЕ SIDEBAR - ЧЕРНЫЙ ФОН С СЕРЫМИ КНОПКАМИ
-st.markdown("""
-<style>
-/* SIDEBAR: МАКСИМАЛЬНО АГРЕССИВНО ЧЕРНЫЙ - ВСЕ ЭЛЕМЕНТЫ */
-section[data-testid="stSidebar"] *,
-section[data-testid="stSidebar"],
-section[data-testid="stSidebar"] > div,
-section[data-testid="stSidebar"] > div > div,
-section[data-testid="stSidebar"] > div > div > div,
-section[data-testid="stSidebar"] > div > div > div > div,
-[data-testid="stSidebar"] *,
-[data-testid="stSidebar"],
-[data-testid="stSidebar"] > div,
-[data-testid="stSidebar"] > div > div,
-.css-1d391kg, .css-1lcbmhc, .css-1aumxhk {
-    background: #1a1a1a !important;
-    background-color: #1a1a1a !important;
-}
 
-/* НЕ ДАВАТЬ КНОПКАМ И ИХ ТЕКСТУ НАСЛЕДОВАТЬ ЧЕРНЫЙ ФОН */
-section[data-testid="stSidebar"] button,
-section[data-testid="stSidebar"] .stButton > button {
-    background: #555555 !important;
-    background-color: #555555 !important;
-}
-
-/* ПРОЗРАЧНЫЙ ФОН ДЛЯ ТЕКСТА ВНУТРИ КНОПОК SIDEBAR */
-section[data-testid="stSidebar"] button *,
-section[data-testid="stSidebar"] .stButton > button *,
-section[data-testid="stSidebar"] button div,
-section[data-testid="stSidebar"] button span {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: #ffffff !important;
-}
-
-/* SIDEBAR: КНОПКИ - СЕРЫЕ С ЧЕТКИМ БЕЛЫМ ТЕКСТОМ */
-section[data-testid="stSidebar"] button,
-section[data-testid="stSidebar"] .stButton > button,
-section[data-testid="stSidebar"] [role="button"] {
-    background-color: #555555 !important;
-    color: #ffffff !important;
-    border: 2px solid #777777 !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-}
-
-section[data-testid="stSidebar"] button:hover,
-section[data-testid="stSidebar"] .stButton > button:hover {
-    background-color: #666666 !important;
-    color: #ffffff !important;
-    border: 2px solid #888888 !important;
-}
-
-/* SIDEBAR: БЕЛЫЙ ТЕКСТ */
-section[data-testid="stSidebar"] .stMarkdown,
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] div {
-    color: #ffffff !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# Проверяем авторизацию
-if check_authentication():
-    show_user_info()
-else:
+init_session_state()
+if not check_authentication():
     st.error("🔒 Для доступа к этой странице необходимо войти в систему")
+    st.info("👈 Перейдите на главную страницу для входа в систему")
     st.stop()
 
 st.title("История")
 st.markdown("Просмотр всех выполненных анализов договоров и их результатов")
 
-# Получаем API клиент
 api_client = get_api_client()
 
-# Управление обновлением данных
+
 col1, col2 = st.columns([4, 1])
 with col1:
     st.markdown("### 📊 Ваши проверки")
@@ -109,7 +43,6 @@ with col2:
         SessionManager.clear_cache()
         st.rerun()
 
-# Фильтры и настройки
 with st.expander("🔧 Фильтры и настройки", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
     
@@ -124,7 +57,7 @@ with st.expander("🔧 Фильтры и настройки", expanded=False):
     with col2:
         status_filter = st.multiselect(
             "📈 Статус:",
-            ["COMPLETED", "ERROR", "PROCESSING", "QUEUED"],
+            ["DONE", "ERROR", "PROCESSING", "QUEUED"],
             default=[],
             help="Фильтр по статусу анализа"
         )
@@ -137,14 +70,10 @@ with st.expander("🔧 Фильтры и настройки", expanded=False):
         )
     
     with col4:
-        show_charts = st.checkbox(
-            "📊 Показать графики",
-            value=True,
-            help="Отображать аналитические графики"
-        )
+        st.markdown("")
 
-# Загрузка данных с кешированием
-@st.cache_data(ttl=30)  # Кешируем на 30 секунд
+
+@st.cache_data(ttl=30)
 def load_prediction_history(limit_param):
     try:
         return api_client.get_prediction_history(limit=limit_param)
@@ -161,7 +90,6 @@ def load_prediction_history(limit_param):
             st.error(f"❌ Ошибка загрузки истории: {error_msg}")
         return {"jobs": [], "total_count": 0}
 
-# Загружаем данные
 with st.spinner("📊 Загружаем историю анализов..."):
     history_data = load_prediction_history(limit)
 
@@ -182,21 +110,19 @@ if not jobs:
     
     st.stop()
 
-# Применяем фильтры
 filtered_jobs = filter_jobs_by_status(jobs, status_filter) if status_filter else jobs
 filtered_jobs = sort_jobs_by_date(filtered_jobs, ascending=False)
 
 st.info(f"📊 Показано {len(filtered_jobs)} из {total_count} анализов")
 
-# Показываем метрики
 if filtered_jobs:
     display_job_metrics(filtered_jobs)
     
 
-# Таблица с анализами
+
 st.markdown("### 📋 Детализация анализов")
 
-# Создаем DataFrame для отображения
+
 display_data = []
 for job in filtered_jobs:
     display_data.append({
@@ -212,7 +138,6 @@ for job in filtered_jobs:
 if display_data:
     df = pd.DataFrame(display_data)
     
-    # Интерактивная таблица
     st.dataframe(
         df,
         use_container_width=True,
@@ -224,7 +149,7 @@ if display_data:
         }
     )
 
-# Детальный просмотр
+
 if show_details and filtered_jobs:
     st.markdown("### 🔍 Подробная информация")
     
@@ -232,9 +157,10 @@ if show_details and filtered_jobs:
         job_id = job.get('id')
         status = job.get('status', 'UNKNOWN')
         
-        # Определяем цвет рамки на основе статуса
+
         border_colors = {
-            'COMPLETED': '#28a745',
+            'DONE': '#28a745',
+            'COMPLETED': '#28a745', 
             'ERROR': '#dc3545',
             'PROCESSING': '#ffc107',
             'QUEUED': '#17a2b8'
@@ -242,7 +168,6 @@ if show_details and filtered_jobs:
         border_color = border_colors.get(status, '#6c757d')
         
         with st.container():
-            # Создаем рамку с цветом статуса
             st.markdown(f"""
             <div style="border-left: 4px solid {border_color}; padding-left: 1rem; margin: 1rem 0;">
             """, unsafe_allow_html=True)
@@ -251,7 +176,6 @@ if show_details and filtered_jobs:
                 f"{get_status_emoji(status)} Анализ #{job_id} - {format_job_status_text(status)}", 
                 expanded=False
             ):
-                # Основная информация
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -266,7 +190,20 @@ if show_details and filtered_jobs:
                     if job.get('risk_score') is not None:
                         risk_percent = job['risk_score'] * 100
                         risk_level = "Высокий" if risk_percent > 70 else "Средний" if risk_percent > 30 else "Низкий"
+                        if risk_percent > 70:
+                            color = "#dc3545" 
+                        elif risk_percent > 30:
+                            color = "#ffc107" 
+                        else:
+                            color = "#28a745" 
+                        
                         st.write(f"**Риск-индекс:** {risk_percent:.1f}% ({risk_level})")
+                        st.progress(risk_percent / 100, text=f"Уровень риска: {risk_level}")
+        
+                    if job.get('risk_clauses'):
+                        risk_count = len(job['risk_clauses'])
+                        high_risk_count = len([c for c in job['risk_clauses'] if c.get('risk_level') == 'HIGH'])
+                        st.write(f"**Найдено рисков:** {risk_count} (критических: {high_risk_count})")
                 
                 with col3:
                     st.markdown("**📅 Временные метки:**")
@@ -275,7 +212,6 @@ if show_details and filtered_jobs:
                     if job.get('finished_at'):
                         st.write(f"**Завершен:** {format_datetime(job['finished_at'])}")
                     
-                    # Время выполнения
                     if job.get('started_at') and job.get('finished_at'):
                         try:
                             start = datetime.fromisoformat(job['started_at'].replace('Z', '+00:00'))
@@ -285,7 +221,6 @@ if show_details and filtered_jobs:
                         except:
                             pass
                 
-                # Результаты анализа
                 if job.get('summary_text'):
                     st.markdown("**📋 Результаты анализа:**")
                     st.text_area(
@@ -296,7 +231,7 @@ if show_details and filtered_jobs:
                         key=f"summary_{job_id}"
                     )
                 
-                # Рисковые пункты
+    
                 if job.get('risk_clauses') and len(job['risk_clauses']) > 0:
                     st.markdown("**⚠️ Выявленные рисковые пункты:**")
                     
@@ -322,135 +257,42 @@ if show_details and filtered_jobs:
                         if i < len(job['risk_clauses']):
                             st.markdown("---")
                 
-                # Действия с результатами
-                if job.get('summary_text'):
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        # Экспорт результатов
-                        if st.button(f"📄 Экспорт результатов", key=f"export_{job_id}"):
-                            risk_index = f"{job['risk_score']*100:.1f}%" if job.get('risk_score') else 'N/A'
-                            risk_clauses_text = chr(10).join([f"{i+1}. {clause.get('clause_text', '')}" for i, clause in enumerate(job.get('risk_clauses', []))]) if job.get('risk_clauses') else 'Не выявлены'
-                            
-                            export_text = f"""АНАЛИЗ ДОГОВОРА #{job_id}
-========================
-
-Статус: {format_job_status_text(status)}
-Дата создания: {format_datetime(job.get('started_at', ''))}
-Риск-индекс: {risk_index}
-Стоимость: {format_currency(float(job.get('used_credits', 0)))}
-
-РЕЗУЛЬТАТЫ АНАЛИЗА:
-{job.get('summary_text', 'Нет данных')}
-
-Рисковые пункты:
-{risk_clauses_text}
-"""
-                            st.download_button(
-                                label="💾 Скачать отчет",
-                                data=export_text,
-                                file_name=f"analysis_report_{job_id}_{datetime.now().strftime('%Y%m%d')}.txt",
-                                mime="text/plain",
-                                key=f"download_{job_id}"
-                            )
-                    
-                    with col2:
-                        # Кнопка повторного анализа
-                        if st.button(f"🔄 Повторить анализ", key=f"repeat_{job_id}"):
-                            st.info("🔄 Функция повторного анализа будет добавлена в следующих версиях")
             
             st.markdown("</div>", unsafe_allow_html=True)
 
-# Пагинация (если есть больше записей)
 if total_count > len(jobs):
     st.markdown("---")
     st.info(f"📊 Показано {len(jobs)} из {total_count} записей")
     
     if st.button("📈 Загрузить больше данных"):
-        # Увеличиваем лимит и перезагружаем
         new_limit = min(limit * 2, total_count)
         st.session_state.history_limit = new_limit
         SessionManager.clear_cache()
         st.rerun()
 
-# Экспорт всех данных
 if filtered_jobs:
     st.markdown("---")
-    st.markdown("### 📊 Экспорт данных")
-    
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📄 Экспорт в CSV", use_container_width=True):
-            csv_data = pd.DataFrame([{
-                'ID': job.get('id'),
-                'Статус': job.get('status'),
-                'Риск_индекс': job.get('risk_score'),
-                'Стоимость': job.get('used_credits'),
-                'Дата_создания': job.get('started_at'),
-                'Дата_завершения': job.get('finished_at'),
-                'Сводка': job.get('summary_text', '')[:100] + '...' if job.get('summary_text') else ''
-            } for job in filtered_jobs]).to_csv(index=False)
-            
-            st.download_button(
-                label="💾 Скачать CSV",
-                data=csv_data,
-                file_name=f"analysis_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv"
-            )
-    
-    with col2:
-        if st.button("📊 Экспорт статистики", use_container_width=True):
-            stats_text = f"""
-СТАТИСТИКА АНАЛИЗОВ
-===================
-
-Общее количество анализов: {len(filtered_jobs)}
-Завершено успешно: {len([j for j in filtered_jobs if j.get('status') == 'COMPLETED'])}
-Ошибок: {len([j for j in filtered_jobs if j.get('status') == 'ERROR'])}
-В обработке: {len([j for j in filtered_jobs if j.get('status') == 'PROCESSING'])}
-
-Общая стоимость: {sum([float(j.get('used_credits', 0)) for j in filtered_jobs]):.2f}₽
-Средняя стоимость: {sum([float(j.get('used_credits', 0)) for j in filtered_jobs])/len(filtered_jobs):.2f}₽
-
-Средний риск-индекс: {sum([j.get('risk_score', 0) for j in filtered_jobs if j.get('risk_score')])/len([j for j in filtered_jobs if j.get('risk_score')])*100:.1f}%
-"""
-            
-            st.download_button(
-                label="💾 Скачать статистику",
-                data=stats_text,
-                file_name=f"analysis_stats_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain"
-            )
-    
-    with col3:
         if st.button("🔄 Очистить фильтры", use_container_width=True):
             st.rerun()
+    
+    with col2:
+        st.empty()
 
-# Боковая панель с дополнительными функциями
 with st.sidebar:
-    if st.button("🏠 Главное меню", use_container_width=True):
-        st.switch_page("app.py")
+    st.markdown('<h1 class="sidebar-main-title">Платформа для анализа договоров</h1>', unsafe_allow_html=True)
+    st.markdown("Интеллектуальный анализ юридических документов")
     
     st.markdown("---")
-    st.markdown("### 📊 Статистика")
     
-    if filtered_jobs:
-        # Общая статистика
-        total_cost = sum([float(j.get('used_credits', 0)) for j in filtered_jobs])
-        avg_cost = total_cost / len(filtered_jobs) if filtered_jobs else 0
-        
-        st.metric("💰 Общая стоимость", format_currency(total_cost))
-        st.metric("📊 Средняя стоимость", format_currency(avg_cost))
-        
-        # Статусы
-        status_counts = {}
-        for job in filtered_jobs:
-            status = job.get('status', 'UNKNOWN')
-            status_counts[status] = status_counts.get(status, 0) + 1
-        
-        st.markdown("**📈 По статусам:**")
-        for status, count in status_counts.items():
-            emoji = get_status_emoji(status)
-            st.write(f"{emoji} **{format_job_status_text(status)}:** {count}")
+    show_user_info()
+    
+    if st.button("Анализировать документ", use_container_width=True):
+        st.switch_page("pages/New_Analysis.py")
+    if st.button("История", use_container_width=True, disabled=True):
+        pass
+    if st.button("Баланс", use_container_width=True):
+        st.switch_page("pages/Wallet.py")
     

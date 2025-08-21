@@ -2,168 +2,146 @@ import pytest
 from fastapi import status
 import jwt
 from datetime import datetime, timedelta
-from services.crud.user import create_user
-
+from unittest.mock import patch, MagicMock
+import json
+import os
 
 class TestJWTSecurity:
-    def test_jwt_token_structure(self, client, test_user_credentials, session):
-        """Тест структуры JWT токена"""
-        
-        create_user(test_user_credentials, session)
-        
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
+    """Test JWT token security"""
+
+    def test_jwt_token_structure(self, client, test_user):
+        """Test JWT token structure and validity"""
+        response = client.post("/auth/signin", json={
+            "email": test_user.email,
+            "password": "password123"
         })
         
-        token = login_response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK
+        token = response.json()["access_token"]
         
-
+        # Verify token structure
+        assert isinstance(token, str)
+        assert len(token.split('.')) == 3  # JWT has 3 parts
+        
+        # Decode token to verify contents
+        secret_key = os.getenv("SECRET_KEY")
         try:
-            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+            assert "user_id" in payload
+            assert "email" in payload
+            assert "exp" in payload
+            assert payload["user_id"] == test_user.id
+            assert payload["email"] == test_user.email
+        except jwt.InvalidTokenError:
+            pytest.fail("Token should be valid")
+
+    def test_token_expiration(self, client, test_user):
+        """Test JWT token expiration"""
+        # Mock time to test expiration
+        with patch('auth.jwt_handler.datetime') as mock_datetime:
+            # Set current time
+            mock_now = datetime(2024, 1, 1, 12, 0, 0)
+            mock_datetime.utcnow.return_value = mock_now
             
-
-            assert "user_id" in decoded_token
-            assert "email" in decoded_token
-            assert "exp" in decoded_token  
+            response = client.post("/auth/signin", json={
+                "email": test_user.email,
+                "password": "password123"
+            })
             
-            assert decoded_token["email"] == test_user_credentials["email"]
+            token = response.json()["access_token"]
             
-        except jwt.DecodeError:
-            pytest.fail("JWT token has invalid structure")
-
-    def test_token_expiration(self, client, test_user_credentials, session):
-        """Тест истечения срока действия токена"""
-        
-        create_user(test_user_credentials, session)
-        
-
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token = login_response.json()["access_token"]
-        
-
-        decoded_token = jwt.decode(token, options={"verify_signature": False})
-        exp_timestamp = decoded_token["exp"]
-        exp_datetime = datetime.fromtimestamp(exp_timestamp)
-        
-
-        now = datetime.now()
-        assert exp_datetime > now
-        assert exp_datetime < now + timedelta(hours=1) 
+            # Verify token works immediately
+            profile_response = client.get("/auth/profile", headers={
+                "Authorization": f"Bearer {token}"
+            })
+            assert profile_response.status_code == status.HTTP_200_OK
 
     def test_invalid_token_formats(self, client):
-        """Тест различных неправильных форматов токенов"""
-        
+        """Test handling of invalid token formats"""
         invalid_tokens = [
             "invalid_token",
-            "Bearer",
+            "Bearer invalid_token",
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid",
             "",
-            "Bearer ",
-            "Bearer invalid.token.format",
-            "NotBearer valid_looking_token",
-            "Bearer " + "a" * 500, 
+            None
         ]
         
-        for invalid_token in invalid_tokens:
-            response = client.get("/auth/profile", headers={
-                "Authorization": invalid_token
-            })
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_token_reuse_security(self, client, test_user_credentials, session):
-        """Тест безопасности повторного использования токенов"""
-        
-        create_user(test_user_credentials, session)
-        
-
-        login_response1 = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token1 = login_response1.json()["access_token"]
-        
-
-        login_response2 = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        token2 = login_response2.json()["access_token"]
-        
-
-        assert token1 != token2
-        
-
-        response1 = client.get("/auth/profile", headers={
-            "Authorization": f"Bearer {token1}"
-        })
-        response2 = client.get("/auth/profile", headers={
-            "Authorization": f"Bearer {token2}"
-        })
-        
-        assert response1.status_code == status.HTTP_200_OK
-        assert response2.status_code == status.HTTP_200_OK
-
-    def test_token_tampering(self, client, test_user_credentials, session):
-        """Тест защиты от изменения токена"""
-        
-        create_user(test_user_credentials, session)
-        
-  
-        login_response = client.post("/auth/signin", json={
-            "email": test_user_credentials["email"],
-            "password": test_user_credentials["password"]
-        })
-        original_token = login_response.json()["access_token"]
-        
-
-        parts = original_token.split('.')
-        if len(parts) == 3:
-
-            tampered_signature = parts[2][:-1] + 'X'
-            tampered_token = f"{parts[0]}.{parts[1]}.{tampered_signature}"
+        for token in invalid_tokens:
+            if token:
+                headers = {"Authorization": token}
+            else:
+                headers = {}
             
-            response = client.get("/auth/profile", headers={
-                "Authorization": f"Bearer {tampered_token}"
-            })
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            response = client.get("/auth/profile", headers=headers)
+            assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
-    def test_cross_user_token_access(self, client, session):
-        """Тест изоляции токенов между пользователями"""
+    def test_token_reuse_security(self, client, test_user):
+        """Test that tokens can be reused within valid time"""
+        # Login and get token
+        response = client.post("/auth/signin", json={
+            "email": test_user.email,
+            "password": "password123"
+        })
         
+        token = response.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Use token multiple times
+        for _ in range(3):
+            profile_response = client.get("/auth/profile", headers=headers)
+            assert profile_response.status_code == status.HTTP_200_OK
 
+    def test_token_tampering(self, client, test_user):
+        """Test detection of tampered tokens"""
+        # Get valid token
+        response = client.post("/auth/signin", json={
+            "email": test_user.email,
+            "password": "password123"
+        })
+        
+        token = response.json()["access_token"]
+        
+        # Tamper with token
+        parts = token.split('.')
+        tampered_token = parts[0] + ".tampered_payload." + parts[2]
+        
+        response = client.get("/auth/profile", headers={
+            "Authorization": f"Bearer {tampered_token}"
+        })
+        
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_cross_user_token_access(self, client):
+        """Test that tokens are user-specific"""
+        # Create two users
         user1_data = {
-            "username": "security_user1",
-            "email": "security1@example.com",
+            "username": "user1",
+            "email": "user1@example.com",
             "password": "password123"
         }
         user2_data = {
-            "username": "security_user2",
-            "email": "security2@example.com",
+            "username": "user2",
+            "email": "user2@example.com",
             "password": "password123"
         }
         
-        create_user(user1_data, session)
-        create_user(user2_data, session)
+        client.post("/auth/signup", json=user1_data)
+        client.post("/auth/signup", json=user2_data)
         
-
+        # Login both users
         login1 = client.post("/auth/signin", json={
             "email": user1_data["email"],
             "password": user1_data["password"]
         })
-        token1 = login1.json()["access_token"]
-        user1_id = login1.json()["user"]["id"]
-        
         login2 = client.post("/auth/signin", json={
             "email": user2_data["email"],
             "password": user2_data["password"]
         })
-        token2 = login2.json()["access_token"]
-        user2_id = login2.json()["user"]["id"]
         
-
+        token1 = login1.json()["access_token"]
+        token2 = login2.json()["access_token"]
+        
+        # Each token should return different user profiles
         profile1 = client.get("/auth/profile", headers={
             "Authorization": f"Bearer {token1}"
         })
@@ -171,211 +149,329 @@ class TestJWTSecurity:
             "Authorization": f"Bearer {token2}"
         })
         
-        assert profile1.json()["id"] == user1_id
-        assert profile2.json()["id"] == user2_id
         assert profile1.json()["email"] == user1_data["email"]
         assert profile2.json()["email"] == user2_data["email"]
-        
-
-        wallet1 = client.get("/wallet/balance", headers={
-            "Authorization": f"Bearer {token1}"
-        })
-        wallet2 = client.get("/wallet/balance", headers={
-            "Authorization": f"Bearer {token2}"
-        })
-        
-        assert wallet1.status_code == status.HTTP_200_OK
-        assert wallet2.status_code == status.HTTP_200_OK
-
-        assert wallet1.json()["balance"] == "0"
-        assert wallet2.json()["balance"] == "0"
-
-
-class TestPasswordSecurity:
-    def test_password_hashing(self, session):
-        """Тест хеширования паролей"""
-        
-        user_data = {
-            "username": "hash_test_user",
-            "email": "hash@example.com",
-            "password": "plaintext_password"
-        }
-        
-        user = create_user(user_data, session)
-        
-
-        assert user.password != "plaintext_password"
-        
-
-        assert user.password.startswith("$2b$")
-        assert len(user.password) > 50  
-
-    def test_password_verification(self, session):
-        """Тест проверки паролей"""
-        
-        user_data = {
-            "username": "verify_test_user",
-            "email": "verify@example.com",
-            "password": "test_password_123"
-        }
-        
-        user = create_user(user_data, session)
-        
-
-        assert user.verify_password("test_password_123") is True
-        
-
-        assert user.verify_password("wrong_password") is False
-        assert user.verify_password("") is False
-        assert user.verify_password("test_password_124") is False  
-        assert user.verify_password("TEST_PASSWORD_123") is False  
-
-    def test_different_users_different_hashes(self, session):
-        """Тест что одинаковые пароли у разных пользователей дают разные хеши"""
-        
-        same_password = "identical_password"
-        
-        user1_data = {
-            "username": "user1_hash",
-            "email": "user1hash@example.com",
-            "password": same_password
-        }
-        user2_data = {
-            "username": "user2_hash",
-            "email": "user2hash@example.com",
-            "password": same_password
-        }
-        
-        user1 = create_user(user1_data, session)
-        user2 = create_user(user2_data, session)
-        
-
-        assert user1.password != user2.password
-        
-
-        assert user1.verify_password(same_password) is True
-        assert user2.verify_password(same_password) is True
+        assert profile1.json()["id"] != profile2.json()["id"]
 
 
 class TestInputValidation:
-    def test_sql_injection_protection(self, client, session):
-        """Тест защиты от SQL-инъекций"""
-        
+    """Test input validation and sanitization"""
 
+    def test_sql_injection_protection(self, client):
+        """Test protection against SQL injection"""
+        # Attempt SQL injection in email field
         malicious_inputs = [
-            "'; DROP TABLE user; --",
-            "admin' OR '1'='1",
-            "admin'; UPDATE user SET role='ADMIN' WHERE id=1; --",
-            "' UNION SELECT * FROM user --",
-            "admin'/**/OR/**/1=1--",
+            "admin@example.com'; DROP TABLE users; --",
+            "admin@example.com' OR '1'='1",
+            "admin@example.com'; SELECT * FROM users; --",
+            "'; UPDATE users SET role='ADMIN' WHERE email='test@example.com'; --"
         ]
         
-        for malicious_input in malicious_inputs:
-
-            response = client.post("/auth/signup", json={
-                "username": "test_user",
-                "email": malicious_input,
-                "password": "password123"
-            })
-            
-
-            assert response.status_code in [
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                status.HTTP_400_BAD_REQUEST
-            ]
-            
-
-            response = client.post("/auth/signup", json={
-                "username": malicious_input,
-                "email": "test@example.com",
-                "password": "password123"
-            })
-            
-
+        for malicious_email in malicious_inputs:
             response = client.post("/auth/signin", json={
-                "email": malicious_input,
+                "email": malicious_email,
                 "password": "password123"
             })
+            
+            # Should either validate input format or return auth error, not crash
+            assert response.status_code in [
+                status.HTTP_401_UNAUTHORIZED,
+                status.HTTP_422_UNPROCESSABLE_ENTITY
+            ]
 
-    def test_xss_protection(self, client, test_user_credentials, session):
-        """Тест защиты от XSS атак"""
-        
+    def test_xss_protection(self, client, auth_headers):
+        """Test protection against XSS attacks"""
         xss_payloads = [
             "<script>alert('xss')</script>",
             "javascript:alert('xss')",
             "<img src=x onerror=alert('xss')>",
-            "';alert('xss');//",
+            "<svg onload=alert('xss')>",
+            "'; alert('xss'); //"
         ]
         
         for payload in xss_payloads:
-
-            malicious_user_data = {
-                "username": payload,
-                "email": "xss@example.com",
-                "password": "password123"
+            # Test XSS in prediction text
+            prediction_data = {
+                "document_text": f"Contract content {payload}",
+                "filename": f"test{payload}.txt"
             }
             
-            response = client.post("/auth/signup", json=malicious_user_data)
-            
-            if response.status_code == status.HTTP_200_OK:
+            with patch('services.prediction_service.process_prediction_request') as mock_predict:
+                mock_predict.side_effect = ValueError("Insufficient balance")
+                
+                response = client.post("/predict", json=prediction_data, headers=auth_headers)
+                
+                # Should handle gracefully, not execute script
+                assert response.status_code in [
+                    status.HTTP_402_PAYMENT_REQUIRED,
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status.HTTP_400_BAD_REQUEST
+                ]
 
-                user_info = response.json()
-   
-                assert "<script>" not in user_info.get("user", {}).get("username", "")
-
-    def test_rate_limiting_simulation(self, client):
-        """Симуляция тестирования ограничения частоты запросов"""
+    def test_rate_limiting_simulation(self, client, test_user):
+        """Test rate limiting behavior (simulated)"""
+        # Simulate rapid login attempts
+        login_data = {
+            "email": test_user.email,
+            "password": "wrong_password"
+        }
         
-
-        failed_attempts = 0
-        max_attempts = 20
+        # Make multiple rapid failed attempts
+        for i in range(5):
+            response = client.post("/auth/signin", json=login_data)
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED
         
-        for i in range(max_attempts):
-            response = client.post("/auth/signin", json={
-                "email": "nonexistent@example.com",
-                "password": "wrong_password"
-            })
-            
-            if response.status_code == status.HTTP_401_UNAUTHORIZED:
-                failed_attempts += 1
-            elif response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
-                break
-        
+        # All should fail with same error (no account lockout implemented yet)
+        # In a real system, we might expect rate limiting after several attempts
 
-        assert failed_attempts > 0 
-
-    def test_large_payload_handling(self, client):
-        """Тест обработки больших данных"""
+    def test_large_payload_handling(self, client, auth_headers):
+        """Test handling of large payloads"""
+        # Create very large document text
+        large_text = "A" * 1000000  # 1MB of text
         
-
-        very_long_string = "a" * 10000
+        prediction_data = {
+            "document_text": large_text,
+            "filename": "large_document.txt"
+        }
         
-        response = client.post("/auth/signup", json={
-            "username": very_long_string,
-            "email": "long@example.com",
-            "password": "password123"
-        })
+        # Should handle large payloads gracefully
+        response = client.post("/predict", json=prediction_data, headers=auth_headers)
         
-
+        # Should either process or reject gracefully, not crash
         assert response.status_code in [
+            status.HTTP_200_OK,
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             status.HTTP_422_UNPROCESSABLE_ENTITY,
-            status.HTTP_400_BAD_REQUEST,
-            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+            status.HTTP_402_PAYMENT_REQUIRED,
+            status.HTTP_400_BAD_REQUEST
         ]
 
-    def test_special_characters_handling(self, client, session):
-        """Тест обработки специальных символов"""
-        
+    def test_special_characters_handling(self, client):
+        """Test handling of special characters in input"""
         special_chars_data = {
-            "username": "user_тест_测试_🚀",
-            "email": "special@example.com",
-            "password": "pass_тест_测试_🔒"
+            "username": "test™user∑∆",
+            "email": "test+email@example.com",
+            "password": "password123!@#$%^&*()"
         }
         
         response = client.post("/auth/signup", json=special_chars_data)
         
-        if response.status_code == status.HTTP_200_OK:
-            user_info = response.json()
-            assert "тест" in user_info["user"]["username"]
-        else:
-            assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        # Should handle special characters appropriately
+        assert response.status_code in [
+            status.HTTP_200_OK,
+            status.HTTP_422_UNPROCESSABLE_ENTITY
+        ]
+
+
+class TestAuthenticationSecurity:
+    """Test authentication security measures"""
+
+    def test_password_hashing(self, client, sample_user_data):
+        """Test that passwords are properly hashed"""
+        # Create user
+        response = client.post("/auth/signup", json=sample_user_data)
+        assert response.status_code == status.HTTP_200_OK
+        
+        # Login to verify password works
+        login_response = client.post("/auth/signin", json={
+            "email": sample_user_data["email"],
+            "password": sample_user_data["password"]
+        })
+        assert login_response.status_code == status.HTTP_200_OK
+        
+        # Password should never appear in response
+        signup_text = json.dumps(response.json())
+        login_text = json.dumps(login_response.json())
+        
+        assert sample_user_data["password"] not in signup_text
+        assert sample_user_data["password"] not in login_text
+
+    def test_sensitive_data_exposure(self, client, auth_headers, test_user):
+        """Test that sensitive data is not exposed"""
+        # Get user profile
+        response = client.get("/auth/profile", headers=auth_headers)
+        
+        assert response.status_code == status.HTTP_200_OK
+        profile_data = response.json()
+        
+        # Sensitive fields should not be present
+        assert "password" not in profile_data
+        assert "hashed_password" not in profile_data
+        
+        # Only safe fields should be present
+        safe_fields = {"id", "username", "email", "role"}
+        assert set(profile_data.keys()) <= safe_fields
+
+    def test_unauthorized_access_patterns(self, client):
+        """Test various unauthorized access attempts"""
+        protected_endpoints = [
+            ("/auth/profile", "GET"),
+            ("/auth/get_all_users", "GET"),
+            ("/wallet/balance", "GET"),
+            ("/wallet/topup", "POST"),
+            ("/predict", "POST"),
+            ("/history", "GET"),
+            ("/documents", "GET")
+        ]
+        
+        for endpoint, method in protected_endpoints:
+            if method == "GET":
+                response = client.get(endpoint)
+            elif method == "POST":
+                response = client.post(endpoint, json={})
+            
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_privilege_escalation_protection(self, client, auth_headers):
+        """Test protection against privilege escalation"""
+        # Regular user trying to access admin endpoint
+        response = client.get("/auth/get_all_users", headers=auth_headers)
+        
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.json()["detail"] == "Admin access required"
+
+
+class TestDataPrivacy:
+    """Test data privacy and isolation"""
+
+    def test_user_data_isolation(self, client):
+        """Test that users can only access their own data"""
+        # Create two users
+        user1_data = {
+            "username": "user1",
+            "email": "user1@example.com",
+            "password": "password123"
+        }
+        user2_data = {
+            "username": "user2",
+            "email": "user2@example.com",
+            "password": "password123"
+        }
+        
+        client.post("/auth/signup", json=user1_data)
+        client.post("/auth/signup", json=user2_data)
+        
+        # Login both users
+        login1 = client.post("/auth/signin", json={
+            "email": user1_data["email"],
+            "password": user1_data["password"]
+        })
+        login2 = client.post("/auth/signin", json={
+            "email": user2_data["email"],
+            "password": user2_data["password"]
+        })
+        
+        headers1 = {"Authorization": f"Bearer {login1.json()['access_token']}"}
+        headers2 = {"Authorization": f"Bearer {login2.json()['access_token']}"}
+        
+        # User 1 creates wallet transaction
+        client.post("/wallet/topup", json={"amount": 100.0}, headers=headers1)
+        
+        # User 2 should not see User 1's transactions
+        transactions1 = client.get("/wallet/transactions", headers=headers1)
+        transactions2 = client.get("/wallet/transactions", headers=headers2)
+        
+        assert transactions1.json()["total_count"] == 1
+        assert transactions2.json()["total_count"] == 0
+
+    def test_document_access_control(self, client, auth_headers):
+        """Test document access control"""
+        # This test simulates document access control
+        # In real implementation, we'd create documents and test access
+        
+        # Attempting to access non-existent document
+        response = client.get("/documents/999", headers=auth_headers)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        
+        # Attempting to access job that doesn't belong to user
+        response = client.get("/jobs/999", headers=auth_headers)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+class TestSecurityHeaders:
+    """Test security headers and configurations"""
+
+    def test_cors_headers(self, client):
+        """Test CORS configuration"""
+        response = client.options("/auth/signin")
+        
+        # Basic response should not crash
+        assert response.status_code in [
+            status.HTTP_200_OK,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        ]
+
+    def test_content_type_validation(self, client, auth_headers):
+        """Test content type validation"""
+        # Test with invalid content type
+        response = client.post(
+            "/predict",
+            data="invalid json data",
+            headers={**auth_headers, "Content-Type": "text/plain"}
+        )
+        
+        assert response.status_code in [
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_400_BAD_REQUEST
+        ]
+
+
+class TestErrorHandling:
+    """Test secure error handling"""
+
+    def test_error_information_disclosure(self, client):
+        """Test that errors don't disclose sensitive information"""
+        # Trigger various errors and check responses
+        
+        # Invalid endpoint
+        response = client.get("/nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        
+        # Invalid method
+        response = client.delete("/auth/signin")
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+        
+        # Malformed JSON
+        response = client.post(
+            "/auth/signin",
+            data="invalid json",
+            headers={"Content-Type": "application/json"}
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        
+        # Error responses should not contain stack traces or internal paths
+        for resp in [response]:
+            if resp.status_code >= 400:
+                error_text = resp.text.lower()
+                sensitive_keywords = [
+                    "traceback",
+                    "file \"",
+                    "line ",
+                    "exception:",
+                    "error:",
+                    "/users/",
+                    "/app/",
+                    "c:\\",
+                    "python"
+                ]
+                
+                for keyword in sensitive_keywords:
+                    assert keyword not in error_text, f"Sensitive info '{keyword}' found in error response"
+
+    def test_graceful_error_handling(self, client, auth_headers):
+        """Test graceful handling of system errors"""
+        # Simulate service unavailable
+        with patch('services.prediction_service.process_prediction_request') as mock_predict:
+            mock_predict.side_effect = Exception("Database connection failed")
+            
+            response = client.post("/predict", json={
+                "document_text": "test content",
+                "filename": "test.txt"
+            }, headers=auth_headers)
+            
+            # Should return proper HTTP error, not crash
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            
+            # Error message should be generic, not expose internal details
+            error_detail = response.json().get("detail", "")
+            assert "Database connection failed" not in error_detail

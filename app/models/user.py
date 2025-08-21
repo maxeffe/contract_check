@@ -57,4 +57,3 @@ class User(SQLModel, table=True):
         return bcrypt.checkpw(password.encode('utf-8'),
                               self.password.encode('utf-8'))
 
-    # Методы для работы с кошельком будут добавлены позже
